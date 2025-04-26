@@ -125,7 +125,16 @@ addOnUISdk.ready.then(async () => {
             formData.append('file', selectedFile);
 
             try {
-                const response = await fetch('https://wufhalwuhlwauhflu.online/upload-syllabus', {
+                // Create description with a prompt field
+                const description = JSON.stringify({
+                    prompt: "Generate flashcards from this document"
+                });
+                
+                // Update formData with the description
+                formData.append('description', description);
+                
+                // Call the generate-flashcards endpoint
+                const response = await fetch('https://wufhalwuhlwauhflu.online/generate-flashcards', {
                     method: 'POST',
                     body: formData
                 });
@@ -135,15 +144,28 @@ addOnUISdk.ready.then(async () => {
                     const responseData = await response.json();
                     
                     // Display upload success message
-                    fileName.textContent = 'Upload successful!';
+                    fileName.textContent = 'Flashcards generated successfully!';
                     fileName.style.color = 'green';
                     
-                    // Create a text element to display the response message
-                    try {
-                        console.log("Showing message:", responseData.message || "Upload successful!");
-                        await sandboxProxy.displayServerMessage(responseData.message || "Upload successful!");
-                    } catch (displayError) {
-                        console.error("Display error:", displayError);
+                    // Display the full API response in the UI for debugging
+                    console.log("Full API response:", JSON.stringify(responseData, null, 2));
+                    fileName.textContent = 'Response received. Processing flashcards...';
+                    
+                    if (responseData.flashcards && responseData.flashcards.length > 0) {
+                        console.log("Received flashcards:", JSON.stringify(responseData.flashcards));
+                        // Create flashcards in the document
+                        const result = await sandboxProxy.createFlashcards(responseData.flashcards);
+                        console.log("Flashcard creation result:", result);
+                        
+                        if (result.success) {
+                            fileName.textContent = `Created ${result.pageCount} flashcards successfully!`;
+                        } else {
+                            fileName.textContent = `Error creating flashcards: ${result.error}`;
+                            fileName.style.color = 'red';
+                        }
+                    } else {
+                        console.log("No flashcards received");
+                        await sandboxProxy.displayServerMessage("No flashcards could be generated from this document.");
                     }
                     
                     setTimeout(() => {
