@@ -140,6 +140,7 @@ addOnUISdk.ready.then(async () => {
                     
                     // Create a text element to display the response message
                     try {
+                        console.log("Showing message:", responseData.message || "Upload successful!");
                         await sandboxProxy.displayServerMessage(responseData.message || "Upload successful!");
                     } catch (displayError) {
                         console.error("Display error:", displayError);
