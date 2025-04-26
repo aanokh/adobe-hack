@@ -1,0 +1,80 @@
+[
+  {
+    "title": "What Is Matrix Addition?",
+    "bulletPoints": [
+      "Combine two matrices of identical dimensions",
+      "Add corresponding entries element by element",
+      "Result is a new matrix with the same size",
+      "Notation: C = A + B"
+    ],
+    "speakerNote": "Think of two spreadsheets of the same size. To add them, you go cell by cell, summing the numbers in each matching position. That new spreadsheet is the sum matrix.",
+    "imagePrompt": null,
+    "layoutType": "bullets",
+    "latex": "C_{ij} = A_{ij} + B_{ij}"
+  },
+  {
+    "title": "Dimension Requirement",
+    "bulletPoints": [
+      "Both matrices must be m × n in size",
+      "You cannot add matrices of different dimensions",
+      "Each entry A(i,j) pairs with B(i,j)",
+      "Sum yields another m × n matrix"
+    ],
+    "speakerNote": "Just like you can’t add a 3×2 spreadsheet to a 2×3 one, matrices must match in rows and columns. Every slot has to line up before you can add.",
+    "imagePrompt": null,
+    "layoutType": "bullets",
+    "latex": "m \\times n + m \\times n = m \\times n"
+  },
+  {
+    "title": "Element-Wise Operation",
+    "bulletPoints": [
+      "For each index (i,j) compute C(i,j)",
+      "Use formula c_{ij} = a_{ij} + b_{ij}",
+      "Operation is independent per position",
+      "Analogous to adding cells in matching grids"
+    ],
+    "speakerNote": "Imagine cooking two identical cookie sheets: you add the dough amount in each matching spot. Each addition happens on its own, and you don’t mix spots.",
+    "imagePrompt": null,
+    "layoutType": "bullets",
+    "latex": "c_{ij} = a_{ij} + b_{ij}"
+  },
+  {
+    "title": "Numeric Example",
+    "bulletPoints": [
+      "A = [[1, 2]; [3, 4]]",
+      "B = [[5, 6]; [7, 8]]",
+      "Add each corresponding entry",
+      "Result C = [[6, 8]; [10, 12]]"
+    ],
+    "speakerNote": "Here’s a concrete case: add 1 and 5 for the top-left, 2 and 6 for top-right, and so on. You end up with a neat 2×2 result.",
+    "imagePrompt": null,
+    "layoutType": "bullets",
+    "latex": "[[1,2];[3,4]] + [[5,6];[7,8]] = [[6,8];[10,12]]"
+  },
+  {
+    "title": "Properties of Matrix Addition",
+    "bulletPoints": [
+      "Commutative: A + B = B + A",
+      "Associative: (A + B) + C = A + (B + C)",
+      "Additive identity: A + 0 = A",
+      "Use negatives for subtraction"
+    ],
+    "speakerNote": "Matrix addition behaves just like regular numbers in many ways: you can swap addends, regroup them, and there’s a zero matrix that does nothing when you add it.",
+    "imagePrompt": null,
+    "layoutType": "bullets",
+    "latex": "A + B = B + A,\\ (A+B)+C = A+(B+C),\\ A+0 = A"
+  },
+  {
+    "title": "Steps for Matrix Addition",
+    "bulletPoints": [
+      "1. Verify both matrices are m × n",
+      "2. For i=1 to m and j=1 to n, compute c_{ij}",
+      "3. Use c_{ij} = a_{ij} + b_{ij}",
+      "4. Assemble entries into the result matrix"
+    ],
+    "speakerNote": "First check sizes match. Then loop through each row and column index, add those two entries, and place the sum in the new matrix. It’s a systematic cell-by-cell process.",
+    "imagePrompt": null,
+    "layoutType": "timeline",
+    "latex": "C_{ij} = A_{ij} + B_{ij}"
+  }
+]

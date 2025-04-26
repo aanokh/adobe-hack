@@ -1,136 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta
-            name="description"
-            content="Get started with Add-on development using JavaScript with Document Sandbox Runtime"
-        />
-        <meta name="keywords" content="Adobe, Express, Add-On, JavaScript, Document Sandbox Runtime" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Get Started</title>
-        <style>
-            .container {
-                margin: 24px;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-            }
 
-            button {
-                background-color: rgb(82, 88, 228);
-                border-color: rgb(82, 88, 228);
-                border-radius: 16px;
-                border-style: solid;
-                color: rgb(255, 255, 255);
-                font-family: sans-serif;
-                height: 32px;
-                transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-                position: relative;
-                overflow: hidden;
-            }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyGenius - Adobe Add-on</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
 
-            button:before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: -100%;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 255, 255, 0.2);
-                transition: all 0.4s ease-in-out;
-                transform: skewX(-15deg);
-            }
+<body>
+  <div class="addon-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-brand">
+        <div class="icon-container">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-sparkles">
+            <path d="M12 3v5m0 4v9M5 8l2.5 2.5M16.5 10.5L19 13M3 17h3m12 0h3M8 3h8M8 21h8" />
+          </svg>
+        </div>
+        <h1 class="brand-name">StudyGenius</h1>
+      </div>
+    </div>
 
-            button:disabled {
-                background-color: rgb(177, 177, 177);
-                border-color: rgb(177, 177, 177);
-                transform: scale(1);
-            }
-
-            button:not([disabled]):hover {
-                background-color: rgb(64, 70, 202);
-                cursor: pointer;
-                transform: scale(1.05) translateY(-2px);
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            }
-            
-            button:not([disabled]):hover:before {
-                left: 100%;
-            }
-
-            .green-button {
-                background-color: rgb(39, 174, 96);
-                border-color: rgb(39, 174, 96);
-            }
-
-            .green-button:not([disabled]):hover {
-                background-color: rgb(33, 150, 83);
-            }
-            
-            .red-button {
-                background-color: rgb(220, 53, 69);
-                border-color: rgb(220, 53, 69);
-            }
-            
-            .red-button:not([disabled]):hover {
-                background-color: rgb(200, 35, 51);
-            }
-            
-            #upload-container {
-                transition: all 0.3s ease;
-            }
-            
-            #file-select-button, #upload-button {
-                background-color: rgb(82, 88, 228);
-                border-color: rgb(82, 88, 228);
-                border-radius: 16px;
-                border-style: solid;
-                color: rgb(255, 255, 255);
-                font-family: sans-serif;
-                height: 32px;
-                transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-                position: relative;
-                overflow: hidden;
-            }
-            
-            #file-select-button:hover, #upload-button:hover {
-                background-color: rgb(64, 70, 202);
-                cursor: pointer;
-                transform: scale(1.05) translateY(-2px);
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            }
-            
-            #upload-button {
-                background-color: rgb(39, 174, 96);
-                border-color: rgb(39, 174, 96);
-            }
-            
-            #upload-button:hover {
-                background-color: rgb(33, 150, 83);
-            }
-        </style>
-    </head>
-    <body>
-        <!-- 
-            Please note that this document does not use the spectrum web components theme for Express.
-            You may use "addOnUISdk.app.ui.theme" to get the current theme and style accordingly.
-        -->
-        <div class="container">
-            <button id="createRectangle" disabled>Create Rectangle</button>
-            <button id="createGreenRectangle" class="green-button" disabled>Create Green Rectangle</button>
-            <button id="createRedRectangle" class="red-button" disabled>Create Red Rectangle</button>
-            
-            <div id="upload-container" style="margin-top: 16px; border: 2px dashed #ccc; border-radius: 8px; padding: 20px; text-align: center;">
-                <p style="margin: 0 0 10px; font-family: sans-serif; color: #555;">Drag & drop a file here to generate flashcards</p>
-                <p style="margin: 0 0 10px; font-family: sans-serif; color: #888; font-size: 12px;">or</p>
-                <input type="file" id="file-input" style="display: none;">
-                <button id="file-select-button" style="width: 150px; margin: 0 auto;">Select File</button>
-                <p id="file-name" style="margin-top: 10px; font-family: sans-serif; color: #444; font-size: 13px;"></p>
-                <button id="upload-button" style="margin-top: 10px; width: 150px; display: none;">Generate Flashcards</button>
-            </div>
+    <!-- Main Content -->
+    <div class="main-content" id="main-content">
+      <!-- Landing Page (default view) -->
+      <div id="landing-page" class="page active">
+        <!-- Intro -->
+        <div class="intro">
+          <h2 class="intro-title">Welcome to StudyGenius</h2>
+          <p class="intro-subtitle">Your AI-powered study assistant</p>
         </div>
 
-        <script type="module" src="ui/index.js"></script>
-    </body>
+        <!-- Menu Items -->
+        <div class="menu-grid">
+          <button class="menu-item" data-page="slides-page">
+            <div class="menu-icon purple">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v5m0 4v9M5 8l2.5 2.5M16.5 10.5L19 13M3 17h3m12 0h3M8 3h8M8 21h8" />
+              </svg>
+            </div>
+            <div class="menu-content">
+              <h3 class="menu-title">Slide Generator</h3>
+              <p class="menu-description">Create beautiful presentation slides from text or files</p>
+            </div>
+          </button>
+
+          <button class="menu-item" data-page="flashcards-page">
+            <div class="menu-icon blue">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+            </div>
+            <div class="menu-content">
+              <h3 class="menu-title">Flashcards</h3>
+              <p class="menu-description">Generate study flashcards to test your knowledge</p>
+            </div>
+          </button>
+
+          <button class="menu-item" data-page="quizzes-page">
+            <div class="menu-icon green">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <path d="M12 17h.01" />
+              </svg>
+            </div>
+            <div class="menu-content">
+              <h3 class="menu-title">Quizzes</h3>
+              <p class="menu-description">Create interactive quizzes with multiple choice questions</p>
+            </div>
+          </button>
+
+          <button class="menu-item" data-page="studyguide-page">
+            <div class="menu-icon amber">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+              </svg>
+            </div>
+            <div class="menu-content">
+              <h3 class="menu-title">Study Guide</h3>
+              <p class="menu-description">Generate comprehensive study guides from your materials</p>
+            </div>
+          </button>
+        </div>
+
+        <!-- Tutorial -->
+        <div class="tutorial-box">
+          <h3 class="tutorial-title">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+              <path d="M12 17h.01" />
+            </svg>
+            How to use StudyGenius
+          </h3>
+          <ul class="tutorial-list">
+            <li><span class="bold">Slide Generator:</span> Create presentation slides by describing what you want or
+              uploading reference materials.</li>
+            <li><span class="bold">Flashcards:</span> Generate study cards with questions and answers to test your
+              knowledge.</li>
+            <li><span class="bold">Quizzes:</span> Create interactive quizzes with multiple choice questions to test
+              your understanding.</li>
+            <li><span class="bold">Study Guide:</span> Generate comprehensive study materials from your notes or
+              textbooks.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Slides Page -->
+      <div id="slides-page" class="page">
+        <!-- Back Button -->
+        <div class="back-button-container">
+          <button class="back-button" data-page="landing-page">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+            Back
+          </button>
+        </div>
+
+        <!-- Intro -->
+        <div class="intro">
+          <h2 class="intro-title">Create Amazing Slides</h2>
+          <p class="intro-subtitle">Describe what you want or use speech-to-text</p>
+        </div>
+
+        <!-- Prompt Input -->
+        <div class="section">
+          <label class="label">Describe your slides</label>
+          <div class="textarea-container">
+            <textarea id="slides-prompt" class="prompt-textarea"
+              placeholder="E.g., Create a 5-slide presentation about renewable energy with data visualizations and modern design..."></textarea>
+            <button id="mic-button" class="mic-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <path d="M12 19v3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- File Upload -->
+        <div class="section">
+          <label class="label">Upload reference materials</label>
+          <div class="upload-container" id="slides-upload-container">
+            <input type="file" id="slides-file-input" class="file-input" multiple>
+            <label for="slides-file-input" class="upload-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <path d="M17 8 12 3 7 8" />
+                <path d="M12 3v12" />
+              </svg>
+              <p class="upload-text">Drag files here or click to browse</p>
+              <p class="upload-subtext">PDF, PPTX, DOCX, Images</p>
+            </label>
+          </div>
+          <div id="slides-files-list" class="files-list"></div>
+        </div>
+
+        <!-- Style Options -->
+        <div class="section">
+          <label class="label">Presentation style</label>
+          <div class="style-grid">
+            <button class="style-button" data-style="professional">Professional</button>
+            <button class="style-button active" data-style="creative">Creative</button>
+            <button class="style-button" data-style="minimal">Minimal</button>
+            <button class="style-button" data-style="modern">Modern</button>
+            <button class="style-button" data-style="academic">Academic</button>
+            <button class="style-button" data-style="playful">Playful</button>
+          </div>
+        </div>
+
+        <!-- Generate Button -->
+        <button id="generate-slides-button" class="generate-button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v5m0 4v9M5 8l2.5 2.5M16.5 10.5L19 13M3 17h3m12 0h3M8 3h8M8 21h8" />
+          </svg>
+          Generate Slides
+        </button>
+      </div>
+
+      <!-- Flashcards Page -->
+      <div id="flashcards-page" class="page">
+        <!-- Back Button -->
+        <div class="back-button-container">
+          <button class="back-button" data-page="landing-page">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+            Back
+          </button>
+        </div>
+
+        <!-- Intro -->
+        <div class="intro">
+          <h2 class="intro-title">Study Flashcards</h2>
+          <p class="intro-subtitle">Generate flashcards from your materials</p>
+        </div>
+
+        <!-- Prompt Input -->
+        <div class="section">
+          <label class="label">What do you want to create flashcards for?</label>
+          <div class="textarea-container">
+            <textarea id="flashcards-prompt" class="prompt-textarea"
+              placeholder="E.g., Create flashcards about photosynthesis and cellular respiration..."></textarea>
+            <button id="flashcards-mic-button" class="mic-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <path d="M12 19v3" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- File Upload -->
+        <div class="section">
+          <label class="label">Upload reference materials</label>
+          <div class="upload-container" id="flashcards-upload-container">
+            <input type="file" id="file-input" class="file-input">
+            <label for="file-input" class="upload-label">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <path d="M17 8 12 3 7 8" />
+                <path d="M12 3v12" />
+              </svg>
+              <p class="upload-text">Drag files here or click to browse</p>
+              <p class="upload-subtext">PDF, PPTX, DOCX, Images</p>
+            </label>
+          </div>
+          <p id="file-name" class="file-name"></p>
+          <div id="flashcards-files-list" class="files-list"></div>
+        </div>
+
+        <!-- Generate Button -->
+        <button id="upload-button" class="generate-button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v5m0 4v9M5 8l2.5 2.5M16.5 10.5L19 13M3 17h3m12 0h3M8 3h8M8 21h8" />
+          </svg>
+          Generate Flashcards
+        </button>
+      </div>
+
+      <!-- Quizzes Page -->
+      <div id="quizzes-page" class="page">
+        <!-- Back Button -->
+        <div class="back-button-container">
+          <button class="back-button" data-page="landing-page">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+            Back
+          </button>
+        </div>
+
+        <!-- Intro -->
+        <div class="intro">
+          <h2 class="intro-title">Interactive Quizzes</h2>
+          <p class="intro-subtitle">Test your knowledge with multiple choice questions</p>
+        </div>
+
+        <!-- Quizzes Input Form -->
+        <div id="quizzes-form" class="active-form">
+          <!-- Prompt Input -->
+          <div class="section">
+            <label class="label">What do you want to be quizzed on?</label>
+            <textarea id="quizzes-prompt" class="prompt-textarea"
+              placeholder="E.g., Create a quiz about world capitals and geography..."></textarea>
+          </div>
+
+          <!-- File Upload -->
+          <div class="section">
+            <label class="label">Upload reference materials</label>
+            <div class="upload-container" id="quizzes-upload-container">
+              <input type="file" id="quizzes-file-input" class="file-input" multiple>
+              <label for="quizzes-file-input" class="upload-label">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <path d="M17 8 12 3 7 8" />
+                  <path d="M12 3v12" />
+                </svg>
+                <p class="upload-text">Drag files here or click to browse</p>
+                <p class="upload-subtext">PDF, PPTX, DOCX, Images</p>
+              </label>
+            </div>
+            <div id="quizzes-files-list" class="files-list"></div>
+          </div>
+
+          <!-- Generate Button -->
+          <button id="generate-quiz-button" class="generate-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v5m0 4v9M5 8l2.5 2.5M16.5 10.5L19 13M3 17h3m12 0h3M8 3h8M8 21h8" />
+            </svg>
+            Generate Quiz
+          </button>
+        </div>
+      </div>
+
+      <!-- Study Guide Page -->
+      <div id="studyguide-page" class="page">
+        <!-- Back Button -->
+        <div class="back-button-container">
+          <button class="back-button" data-page="landing-page">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m15 18-6-6 6-6" />
+            </svg>
+            Back
+          </button>
+        </div>
+
+        <!-- Intro -->
+        <div class="intro">
+          <h2 class="intro-title">Study Guide Generator</h2>
+          <p class="intro-subtitle">Create comprehensive study materials</p>
+        </div>
+
+        <!-- Study Guide Input Form -->
+        <div id="studyguide-form" class="active-form">
+          <!-- Prompt Input -->
+          <div class="section">
+            <label class="label">What do you need a study guide for?</label>
+            <textarea id="studyguide-prompt" class="prompt-textarea"
+              placeholder="E.g., Create a comprehensive study guide for organic chemistry focusing on reaction mechanisms..."></textarea>
+          </div>
+
+          <!-- File Upload -->
+          <div class="section">
+            <label class="label">Upload reference materials</label>
+            <div class="upload-container" id="studyguide-upload-container">
+              <input type="file" id="studyguide-file-input" class="file-input" multiple>
+              <label for="studyguide-file-input" class="upload-label">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <path d="M17 8 12 3 7 8" />
+                  <path d="M12 3v12" />
+                </svg>
+                <p class="upload-text">Drag files here or click to browse</p>
+                <p class="upload-subtext">PDF, PPTX, DOCX, Images</p>
+              </label>
+            </div>
+            <div id="studyguide-files-list" class="files-list"></div>
+          </div>
+
+          <!-- Generate Button -->
+          <button id="generate-studyguide-button" class="generate-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3v5m0 4v9M5 8l2.5 2.5M16.5 10.5L19 13M3 17h3m12 0h3M8 3h8M8 21h8" />
+            </svg>
+            Generate Study Guide
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="ui/index.js"></script>
+</body>
+
 </html>
