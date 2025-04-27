@@ -22,14 +22,14 @@ addOnUISdk.ready.then(async () => {
     }
     return array;
   }
-  
+
   // Store the correct answer index for the current question
   let currentCorrectAnswerIndex = -1;
-  
+
   async function onPageChanged(newId) {
     console.log("Page switched to:", newId);
     const quizData = await sandboxProxy.getCurrentQuizQuestion();
-    
+
     // Reset any previous answer states
     const answerButtons = [
       document.getElementById('quiz-answer-a'),
@@ -37,7 +37,7 @@ addOnUISdk.ready.then(async () => {
       document.getElementById('quiz-answer-c'),
       document.getElementById('quiz-answer-d')
     ];
-    
+
     answerButtons.forEach(btn => {
       if (btn) {
         btn.classList.remove('selected', 'correct', 'incorrect');
@@ -52,20 +52,20 @@ addOnUISdk.ready.then(async () => {
         wrong2: quizData.questionData.wrong_answer_2,
         wrong3: quizData.questionData.wrong_answer_3
       });
-      
+
       // Get the answers container and show it
       const answersContainer = document.getElementById('quiz-answers-container');
       if (answersContainer) {
         answersContainer.classList.remove('hidden');
       }
-      
+
       // If there's a problem URL, render the LaTeX image
       if (quizData.questionData.problem && quizData.questionData.problem.startsWith('http')) {
         console.log("Rendering LaTeX image from URL:", quizData.questionData.problem);
-        
+
         // Check if we have a quiz-image container
         let imageContainer = document.getElementById('quiz-image-container');
-        
+
         // If not, create one
         if (!imageContainer) {
           imageContainer = document.createElement('div');
@@ -76,16 +76,16 @@ addOnUISdk.ready.then(async () => {
           imageContainer.style.backgroundColor = '#f9fafb';
           imageContainer.style.borderRadius = '0.5rem';
           imageContainer.style.minHeight = '120px'; // Ensure there's enough space
-          
+
           // Insert it before the answers container
           if (answersContainer.parentNode) {
             answersContainer.parentNode.insertBefore(imageContainer, answersContainer);
           }
         }
-        
+
         // Clear any previous content
         imageContainer.innerHTML = '';
-        
+
         // Create and add an image element
         const img = document.createElement('img');
         img.src = quizData.questionData.problem;
@@ -94,9 +94,9 @@ addOnUISdk.ready.then(async () => {
         img.style.height = 'auto';
         img.style.maxHeight = 'none'; // No height restriction
         img.style.margin = '20px 0'; // Add generous vertical spacing
-        
+
         imageContainer.appendChild(img);
-        
+
         // Also try to render the image in the document using our function
         try {
           await renderLatexImage(quizData.questionData.problem);
@@ -104,7 +104,7 @@ addOnUISdk.ready.then(async () => {
           console.error("Failed to render LaTeX image in document:", err);
         }
       }
-      
+
       // Create an array of answers with their correctness
       const answers = [
         { content: quizData.questionData.correct_answer, isCorrect: true },
@@ -112,19 +112,19 @@ addOnUISdk.ready.then(async () => {
         { content: quizData.questionData.wrong_answer_2, isCorrect: false },
         { content: quizData.questionData.wrong_answer_3, isCorrect: false }
       ];
-      
+
       // Shuffle the answers
       const shuffledAnswers = shuffleArray(answers);
-      
+
       // Update the answer buttons with the shuffled answers
       for (let i = 0; i < answerButtons.length; i++) {
         const button = answerButtons[i];
         if (button && i < shuffledAnswers.length) {
           // Clear any previous content
           button.innerHTML = '';
-          
+
           const answerContent = shuffledAnswers[i].content;
-          
+
           // Check if the answer content is a URL (for LaTeX images)
           if (typeof answerContent === 'string' && answerContent.startsWith('http')) {
             // Create an image element for the LaTeX
@@ -135,16 +135,16 @@ addOnUISdk.ready.then(async () => {
             img.style.height = 'auto';
             img.style.maxHeight = 'none'; // No height restriction
             img.style.margin = '8px 0'; // Add vertical spacing
-            
+
             // Add the image to the button
             button.appendChild(img);
           } else {
             // Regular text answer
             button.textContent = answerContent;
           }
-          
+
           button.setAttribute('data-is-correct', shuffledAnswers[i].isCorrect);
-          
+
           // Store the index of the correct answer
           if (shuffledAnswers[i].isCorrect) {
             currentCorrectAnswerIndex = i;
@@ -153,13 +153,13 @@ addOnUISdk.ready.then(async () => {
       }
     } else {
       console.log("No quiz data available for current page");
-      
+
       // Hide the answers container if no quiz data
       const answersContainer = document.getElementById('quiz-answers-container');
       if (answersContainer) {
         answersContainer.classList.add('hidden');
       }
-      
+
       // Hide the image container if it exists
       const imageContainer = document.getElementById('quiz-image-container');
       if (imageContainer) {
@@ -167,12 +167,12 @@ addOnUISdk.ready.then(async () => {
       }
     }
   }
-  
+
   // Start polling for page changes and quiz data
   window.setInterval(async () => {
     try {
       const currentId = await sandboxProxy.getCurrentPageId();
-      
+
       if (currentId !== lastPageId) {
         lastPageId = currentId;
         await onPageChanged(currentId);
@@ -572,7 +572,7 @@ addOnUISdk.ready.then(async () => {
         document.getElementById('quiz-answer-c'),
         document.getElementById('quiz-answer-d')
       ];
-      
+
       // Add click event to each button
       answerButtons.forEach((button, index) => {
         if (button) {
@@ -581,35 +581,35 @@ addOnUISdk.ready.then(async () => {
             if (answerButtons.some(btn => btn && (btn.classList.contains('correct') || btn.classList.contains('incorrect')))) {
               return;
             }
-            
+
             // Remove selection from all buttons
             answerButtons.forEach(btn => {
               if (btn) btn.classList.remove('selected');
             });
-            
+
             // Add selection to clicked button
             button.classList.add('selected');
-            
+
             // Check if answer is correct
             const isCorrect = button.getAttribute('data-is-correct') === 'true';
-            
+
             // Show feedback
             if (isCorrect) {
               button.classList.add('correct');
-              
+
               // Create feedback container
               const feedbackContainer = document.createElement('div');
               feedbackContainer.className = 'feedback-container';
-              
+
               // Success feedback
               const feedbackText = document.createElement('div');
               feedbackText.className = 'feedback-text correct';
               feedbackText.textContent = '✓ Correct!';
               feedbackContainer.appendChild(feedbackText);
-              
+
               // Add feedback container to button
               button.appendChild(feedbackContainer);
-              
+
               // Remove the feedback text after 3 seconds
               setTimeout(() => {
                 if (feedbackContainer && feedbackContainer.parentNode) {
@@ -618,39 +618,39 @@ addOnUISdk.ready.then(async () => {
               }, 3000);
             } else {
               button.classList.add('incorrect');
-              
+
               // Create feedback container
               const feedbackContainer = document.createElement('div');
               feedbackContainer.className = 'feedback-container';
-              
+
               // Error feedback
               const feedbackText = document.createElement('div');
               feedbackText.className = 'feedback-text incorrect';
               feedbackText.textContent = '✗ Incorrect';
               feedbackContainer.appendChild(feedbackText);
-              
+
               // Add feedback container to button
               button.appendChild(feedbackContainer);
-              
+
               // Highlight the correct answer
               if (currentCorrectAnswerIndex >= 0 && currentCorrectAnswerIndex < answerButtons.length) {
                 const correctButton = answerButtons[currentCorrectAnswerIndex];
                 if (correctButton) {
                   correctButton.classList.add('correct');
-                  
+
                   // Create feedback container for correct answer
                   const correctFeedbackContainer = document.createElement('div');
                   correctFeedbackContainer.className = 'feedback-container';
-                  
+
                   // Show correct answer feedback
                   const correctFeedback = document.createElement('div');
                   correctFeedback.className = 'feedback-text correct';
                   correctFeedback.textContent = '✓ Correct Answer';
                   correctFeedbackContainer.appendChild(correctFeedback);
-                  
+
                   // Add feedback container to correct button
                   correctButton.appendChild(correctFeedbackContainer);
-                  
+
                   // Remove the feedback containers after 3 seconds
                   setTimeout(() => {
                     if (feedbackContainer && feedbackContainer.parentNode) {
@@ -667,7 +667,7 @@ addOnUISdk.ready.then(async () => {
         }
       });
     };
-    
+
     setupQuizAnswerButtons();
     const fileInput = document.getElementById("quizzes-file-input");
     const fileName = document.getElementById("quizzes-file-name");
@@ -742,7 +742,7 @@ addOnUISdk.ready.then(async () => {
         try {
           generateQuizButton.disabled = true;
           generateQuizButton.textContent = "Uploading...";
-          
+
           // Hide answer buttons when starting a new quiz
           document.getElementById('quiz-answers-container').classList.add('hidden');
 
@@ -771,17 +771,17 @@ addOnUISdk.ready.then(async () => {
               fileName.textContent = "Quiz data received. Creating quiz pages...";
               fileName.style.color = "green";
             }
-            
+
             if (responseData && responseData.problems && responseData.problems.length > 0) {
               console.log("Received quiz problems:", JSON.stringify(responseData.problems));
-              
+
               // Call the sandbox function to create quiz pages
               const result = await sandboxProxy.generateQuiz(responseData);
               console.log("Quiz creation result:", result);
-              
+
               if (result.success && fileName) {
                 fileName.textContent = `Created ${result.pageCount} quiz questions successfully!`;
-                
+
                 // Show the answer buttons
                 document.getElementById('quiz-answers-container').classList.remove('hidden');
               }
@@ -907,14 +907,14 @@ addOnUISdk.ready.then(async () => {
               fileName.textContent = "Processing study guide data...";
               fileName.style.color = "green";
             }
-            
+
             // Check if we have the expected data format
             if (responseData && responseData.title && Array.isArray(responseData.topics)) {
               // Call the sandbox function to create the study guide
               try {
                 const result = await sandboxProxy.generateStudyGuide(responseData);
                 console.log("Study guide creation result:", result);
-                
+
                 if (result.success) {
                   if (fileName) {
                     fileName.textContent = "Study guide created successfully!";
@@ -1020,13 +1020,13 @@ addOnUISdk.ready.then(async () => {
     if (generateSlidesButton) {
       // Set initial button text to "Generate Outline"
       generateSlidesButton.textContent = "Generate Outline";
-      
+
       generateSlidesButton.addEventListener("click", async () => {
         animateButtonClick(generateSlidesButton);
-        
+
         // Check if we're generating outline or slides based on button text
         const isGeneratingOutline = generateSlidesButton.textContent === "Generate Outline";
-        
+
         console.log(isGeneratingOutline ? "Generating outline..." : "Generating slides...");
 
         if (!selectedFile) {
@@ -1063,19 +1063,19 @@ addOnUISdk.ready.then(async () => {
                 fileName.textContent = "Outline received successfully!";
                 fileName.style.color = "green";
               }
-              
+
               // Call the sandbox function to generate the outline in the document
               const result = await sandboxProxy.generateOutline(outlineData);
               console.log("Outline creation result:", result);
-              
+
               if (result.success) {
                 // Store the text node ID and page ID for later use
                 textNodeId = result.textNodeId;
                 outlinePageId = result.pageId;
-                
+
                 // Change button text to "Generate Slides" for next step
                 generateSlidesButton.textContent = "Generate Slides";
-                
+
                 if (fileName) {
                   fileName.textContent = "Outline created successfully! Click 'Generate Slides' to continue.";
                 }
@@ -1088,67 +1088,67 @@ addOnUISdk.ready.then(async () => {
           } else {
             // Now we're generating slides using the outline
             console.log("Generating slides from outline. Using text node ID:", textNodeId, "and page ID:", outlinePageId);
-            
+
             try {
               // First, get the outline text content from the text node
               const outlineResult = await sandboxProxy.getOutlineText(textNodeId, outlinePageId);
-              
+
               if (!outlineResult.success) {
                 throw new Error(outlineResult.error || "Failed to get outline text");
               }
-              
+
               console.log("Retrieved outline text:", outlineResult.textContent);
-              
+
               // Now call the backend to generate slides with the outline
               const formData = new FormData();
               formData.append("file", selectedFile);
-              
+
               const promptInput = document.getElementById("slides-prompt");
               const promptText = promptInput ? promptInput.value : "";
-              
+
               // Add the outline text to the description JSON
               formData.append("description", JSON.stringify({
                 prompt: promptText || "Generate slides from this outline",
                 outline: outlineResult.textContent  // Add the outline text here
               }));
-              
+
               // Update UI
               generateSlidesButton.textContent = "Generating...";
-              
+
               // Call the generate-slidedeck backend endpoint
               const response = await fetch("https://wufhalwuhlwauhflu.online/generate-slidedeck", {
                 method: "POST",
                 body: formData,
               });
-              
+
               if (response.ok) {
                 const responseData = await response.json();
                 console.log("Slides data received:", responseData);
-                
+
                 if (fileName) {
                   fileName.textContent = "Generating slides in document...";
                   fileName.style.color = "green";
                 }
-                
+
                 // Rather than create all slides at once and then add images,
                 // we'll create each slide and add its image immediately if it has one
                 const allSlides = responseData.slides || [];
                 let totalCreatedSlides = 0;
-                
+
                 // Process slides one by one
                 for (let i = 0; i < allSlides.length; i++) {
                   const slide = allSlides[i];
-                  
+
                   // Create a single slide
                   const singleSlideResult = await sandboxProxy.generateSingleSlide(slide, i, allSlides.length);
-                  console.log(`Created slide ${i+1}:`, singleSlideResult);
-                  
+                  console.log(`Created slide ${i + 1}:`, singleSlideResult);
+
                   if (singleSlideResult.success) {
                     totalCreatedSlides++;
-                    
+
                     // If the slide has an image, render it right now while we're still on this page
                     if (slide.image) {
-                      console.log(`Rendering image for slide ${i+1}:`, slide.image);
+                      console.log(`Rendering image for slide ${i + 1}:`, slide.image);
                       try {
                         await renderLatexImage(slide.image);
                       } catch (imgError) {
@@ -1157,14 +1157,14 @@ addOnUISdk.ready.then(async () => {
                     }
                   }
                 }
-                
+
                 const slidesResult = {
                   success: totalCreatedSlides > 0,
                   pageCount: totalCreatedSlides,
                   message: `Created ${totalCreatedSlides} slides`
                 };
                 console.log("Slides creation result:", slidesResult);
-                
+
                 if (slidesResult.success) {
                   if (fileName) {
                     fileName.textContent = `Created ${slidesResult.pageCount} slides successfully!`;
@@ -1200,57 +1200,49 @@ addOnUISdk.ready.then(async () => {
   }
 
   // Buttons are now permanently visible, so no need for a toggle function
-  
-  // Function to render LaTeX image in the document (positioned in top right)
+
   async function renderLatexImage(latexImageUrl) {
     try {
-      // STEP 1: Use the provided LaTeX rendered image URL
-      const svgUrl = latexImageUrl;
-      
-      // STEP 2: Fetch the SVG as a Blob
-      const response = await fetch(svgUrl, { mode: "cors" });
+      console.log(`Fetching LaTeX image: ${latexImageUrl}`);
+      const response = await fetch(latexImageUrl, { mode: "cors" });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
       const blob = await response.blob();
-      
-      // STEP 3: Insert into Adobe Express document
-      // Position the image in the top right of the current artboard with proper dimensions
+
       const imageElement = await addOnUISdk.app.document.addImage(blob, {
         title: "LaTeX Equation",
         author: "Adobe Academy",
       });
-      
-      // Try to position it in the top right with appropriate size
-      // Get the current document state
+
       const documentState = await addOnUISdk.app.document.getState();
       if (documentState && documentState.isModifiable) {
         try {
-          // Position the image in the top right of the artboard
-          // Set image width to approximately half the artboard width
-          const imageWidth = 500; // About half the artboard width (artboard is 1200px)
-          
-          // Calculate proper height to maintain aspect ratio if possible
+          const imageWidth = 500; // About half the artboard width
           const aspectRatio = imageElement.height / imageElement.width;
-          const imageHeight = Math.min(300, imageWidth * aspectRatio); // Don't make it too tall
-          
-          // Position in top right with some margin
+          const imageHeight = Math.min(300, imageWidth * aspectRatio);
+
           await imageElement.transform({
-            x: 650, // Position from right side (1200/2 + 50 margin)
-            y: 120, // Position below header (80px header + 40px margin)
+            x: 650, // Position from right side
+            y: 200, // ✅ Lowered a bit: was 120, now 200
             width: imageWidth,
-            height: imageHeight
+            height: imageHeight,
           });
         } catch (transformError) {
           console.warn("Could not transform image position, using default placement:", transformError);
         }
       }
-      
-      console.log("LaTeX image inserted in top right corner successfully!");
+
+      console.log("LaTeX image inserted successfully!");
       return true;
     } catch (error) {
       console.error("Error inserting LaTeX image:", error);
       return false;
     }
   }
-  
+
   // Initialize all functionality
   function init() {
     setupNavigation()
