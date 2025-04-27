@@ -1050,6 +1050,164 @@ function start() {
     }
   };
 
+  // Add function to generate outline and render it to a text node on a new page
+  sandboxApi.generateOutline = async (outlineData) => {
+    try {
+      console.log("Generate outline request received:", JSON.stringify(outlineData));
+      
+      if (!outlineData || !Array.isArray(outlineData.titles)) {
+        console.error("Invalid outline data format:", outlineData);
+        return { success: false, error: "Outline data is not in the expected format" };
+      }
+      
+      try {
+        // Define page size (same as other features)
+        const pageSize = { width: 1200, height: 800 };
+        
+        // Get document root
+        const docRoot = editor.documentRoot;
+        console.log("Document root:", docRoot);
+        
+        // Create a new page for the outline
+        console.log("Creating new page for outline");
+        const newPage = docRoot.pages.addPage(pageSize);
+        console.log("New page created:", newPage);
+        
+        // Get the first artboard from the page
+        const artboard = newPage.artboards.first;
+        console.log("Using artboard:", artboard);
+        
+        // Create background rectangle
+        const bgRect = editor.createRectangle();
+        bgRect.width = artboard.width;
+        bgRect.height = artboard.height;
+        bgRect.translation = { x: 0, y: 0 };
+        
+        // Use a light purple color for the background (matching other features)
+        const bgColor = { red: 0.97, green: 0.95, blue: 1.0, alpha: 1 };
+        bgRect.fill = editor.makeColorFill(bgColor);
+        
+        // Add to artboard first (so it's in the background)
+        artboard.children.append(bgRect);
+        
+        // Create a header rectangle
+        const headerRect = editor.createRectangle();
+        headerRect.width = artboard.width;
+        headerRect.height = 80;
+        headerRect.translation = { x: 0, y: 0 };
+        
+        // Use a purple color for the header (matching our UI)
+        const headerColor = { red: 0.49, green: 0.36, blue: 0.96, alpha: 1 };
+        headerRect.fill = editor.makeColorFill(headerColor);
+        
+        // Add header to artboard
+        artboard.children.append(headerRect);
+        
+        // Create header text
+        const headerText = editor.createText();
+        headerText.fullContent.text = "Presentation Outline";
+        
+        // Style header text
+        headerText.fullContent.applyCharacterStyles(
+          {
+            fontSize: 32,
+            fontWeight: "bold",
+            color: { red: 1, green: 1, blue: 1, alpha: 1 },
+          },
+          { start: 0, length: headerText.fullContent.text.length },
+        );
+        
+        // Position header text
+        headerText.translation = { x: 500, y: headerRect.height / 1.5 };
+        headerText.textAlignment = constants.TextAlignment.center;
+        
+        // Add header text to artboard
+        artboard.children.append(headerText);
+        
+        // Create the outline text node
+        console.log("Creating outline text node");
+        const textNode = editor.createText();
+        
+        // Build the full content with bullet points
+        let fullContent = "";
+        
+        // Add each title as a bullet point
+        outlineData.titles.forEach((title) => {
+          fullContent += `• ${title}\n\n`;
+        });
+        
+        // Set the text content
+        textNode.fullContent.text = fullContent;
+        
+        // Apply basic styling to the entire text
+        textNode.fullContent.applyCharacterStyles(
+          {
+            fontSize: 24,
+            color: { red: 0.2, green: 0.2, blue: 0.2, alpha: 1 },
+          },
+          { start: 0, length: fullContent.length }
+        );
+        
+        // Set text to auto-height layout for wrapping
+        textNode.layout = {
+          type: constants.TextType.autoHeight,
+          width: artboard.width - 100 // Width with margins
+        };
+        
+        // Set alignment
+        textNode.textAlignment = constants.TextAlignment.left;
+        
+        // Position below header with some margin
+        textNode.translation = { x: 50, y: headerRect.height + 40 };
+        
+        // Add to artboard
+        artboard.children.append(textNode);
+        
+        // Create a footer with a friendly message
+        const footerText = editor.createText();
+        footerText.fullContent.text = "This outline can be used to generate presentation slides. Click 'Generate Slides' to continue.";
+        
+        // Style footer text
+        footerText.fullContent.applyCharacterStyles(
+          {
+            fontSize: 16,
+            fontStyle: "italic",
+            color: { red: 0.4, green: 0.4, blue: 0.4, alpha: 1 },
+          },
+          { start: 0, length: footerText.fullContent.text.length }
+        );
+        
+        // Set alignment and position at bottom of page
+        footerText.textAlignment = constants.TextAlignment.center;
+        footerText.layout = {
+          type: constants.TextType.autoHeight,
+          width: artboard.width - 200
+        };
+        footerText.translation = { x: 100, y: artboard.height - 50 };
+        
+        // Add footer to artboard
+        artboard.children.append(footerText);
+        
+        // Skip trying to bring the page into view as it's broken
+        console.log("Outline page created successfully with text node ID:", textNode.id);
+        
+        // Return success with the node ID for future reference
+        return {
+          success: true,
+          textNodeId: textNode.id,
+          pageId: newPage.id,
+          message: "Outline created successfully on new page"
+        };
+      } catch (nodeError) {
+        console.error("Error creating outline page:", nodeError);
+        throw nodeError;
+      }
+    } catch (error) {
+      console.error("Error in generateOutline:", error);
+      return { success: false, error: error.message };
+    }
+  };
+
   // Expose `sandboxApi` to the UI runtime.
   runtime.exposeApi(sandboxApi)
 }

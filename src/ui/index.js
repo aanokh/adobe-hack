@@ -961,6 +961,8 @@ addOnUISdk.ready.then(async () => {
     const uploadContainer = document.getElementById("slides-upload-container");
 
     let selectedFile = null;
+    let textNodeId = null; // Store the text node ID for later reference
+    let outlinePageId = null; // Store the page ID for later reference
 
     // Handle file selection
     if (fileInput) {
@@ -1014,14 +1016,21 @@ addOnUISdk.ready.then(async () => {
       }
     }
 
-    // Handle "Generate Slides" button click
+    // Handle Generate button click (initially "Generate Outline", later "Generate Slides")
     if (generateSlidesButton) {
+      // Set initial button text to "Generate Outline"
+      generateSlidesButton.textContent = "Generate Outline";
+      
       generateSlidesButton.addEventListener("click", async () => {
         animateButtonClick(generateSlidesButton);
-        console.log("Generating slides...");
+        
+        // Check if we're generating outline or slides based on button text
+        const isGeneratingOutline = generateSlidesButton.textContent === "Generate Outline";
+        
+        console.log(isGeneratingOutline ? "Generating outline..." : "Generating slides...");
 
         if (!selectedFile) {
-          console.error("No file selected for slides generation.");
+          console.error("No file selected.");
           return;
         }
 
@@ -1036,35 +1045,64 @@ addOnUISdk.ready.then(async () => {
           const promptText = promptInput ? promptInput.value : "";
 
           formData.append("description", JSON.stringify({
-            prompt: promptText || "Generate slides from this file",
+            prompt: promptText || "Generate outline from this file",
           }));
 
-          // 🚀 Correct backend endpoint you mentioned for slides
-          const response = await fetch("https://wufhalwuhlwauhflu.online/generate-outline", {
-            method: "POST",
-            body: formData,
-          });
+          if (isGeneratingOutline) {
+            // Call the generate-outline endpoint
+            const response = await fetch("https://wufhalwuhlwauhflu.online/generate-outline", {
+              method: "POST",
+              body: formData,
+            });
 
-          if (response.ok) {
-            const responseData = await response.json();
-            console.log("Slides data received:", responseData);
+            if (response.ok) {
+              const outlineData = await response.json();
+              console.log("Outline data received:", outlineData);
 
-            if (fileName) {
-              fileName.textContent = "Slides generated successfully!";
-              fileName.style.color = "green";
+              if (fileName) {
+                fileName.textContent = "Outline received successfully!";
+                fileName.style.color = "green";
+              }
+              
+              // Call the sandbox function to generate the outline in the document
+              const result = await sandboxProxy.generateOutline(outlineData);
+              console.log("Outline creation result:", result);
+              
+              if (result.success) {
+                // Store the text node ID and page ID for later use
+                textNodeId = result.textNodeId;
+                outlinePageId = result.pageId;
+                
+                // Change button text to "Generate Slides" for next step
+                generateSlidesButton.textContent = "Generate Slides";
+                
+                if (fileName) {
+                  fileName.textContent = "Outline created successfully! Click 'Generate Slides' to continue.";
+                }
+              } else {
+                throw new Error(result.error || "Failed to create outline");
+              }
+            } else {
+              throw new Error(`Server responded with status ${response.status}`);
             }
           } else {
-            throw new Error(`Server responded with status ${response.status}`);
+            // TODO: This part will be implemented in the future to handle actual slide generation
+            console.log("Full slides generation will be implemented in the future. Using text node ID:", textNodeId, "and page ID:", outlinePageId);
+            
+            if (fileName) {
+              fileName.textContent = "Slides feature coming soon!";
+              fileName.style.color = "green";
+            }
           }
         } catch (error) {
-          console.error("Failed to generate slides:", error);
+          console.error("Operation failed:", error);
           if (fileName) {
-            fileName.textContent = "Slides generation failed: " + error.message;
+            fileName.textContent = "Operation failed: " + error.message;
             fileName.style.color = "red";
           }
         } finally {
           generateSlidesButton.disabled = false;
-          generateSlidesButton.textContent = "Generate Slides";
+          // Don't reset button text here as we want to preserve the state change from "Generate Outline" to "Generate Slides"
         }
       });
     }
