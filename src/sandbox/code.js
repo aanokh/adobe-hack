@@ -203,8 +203,7 @@ function start() {
           )
 
           // Position header text
-          headerText.translation = { x: 30, y: headerRect.height/4 }
-          headerText.textAlignment = constants.TextAlignment.center;
+          headerText.translation = { x: 30, y: headerRect.height/4}
 
           // Add header text to artboard
           artboard.children.append(headerText)
