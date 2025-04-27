@@ -904,8 +904,38 @@ addOnUISdk.ready.then(async () => {
             console.log("Study guide data received:", responseData);
 
             if (fileName) {
-              fileName.textContent = "Study guide generated successfully!";
+              fileName.textContent = "Processing study guide data...";
               fileName.style.color = "green";
+            }
+            
+            // Check if we have the expected data format
+            if (responseData && responseData.title && Array.isArray(responseData.topics)) {
+              // Call the sandbox function to create the study guide
+              try {
+                const result = await sandboxProxy.generateStudyGuide(responseData);
+                console.log("Study guide creation result:", result);
+                
+                if (result.success) {
+                  if (fileName) {
+                    fileName.textContent = "Study guide created successfully!";
+                    fileName.style.color = "green";
+                  }
+                } else {
+                  throw new Error(result.error || "Failed to create study guide");
+                }
+              } catch (sandboxError) {
+                console.error("Error in sandbox function:", sandboxError);
+                if (fileName) {
+                  fileName.textContent = "Error creating study guide: " + (sandboxError.message || "Unknown error");
+                  fileName.style.color = "red";
+                }
+              }
+            } else {
+              console.error("Invalid study guide data format:", responseData);
+              if (fileName) {
+                fileName.textContent = "Invalid study guide data received from server";
+                fileName.style.color = "red";
+              }
             }
           } else {
             throw new Error(`Server responded with status ${response.status}`);

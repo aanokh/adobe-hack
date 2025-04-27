@@ -634,15 +634,182 @@ function start() {
       }
     },
 
-    // Generate study guide (placeholder for future implementation)
-    generateStudyGuide: async (prompt) => {
+    // Generate study guide based on backend data
+    generateStudyGuide: async (studyGuideData) => {
       try {
-        console.log("Generate study guide request received:", prompt)
-        createDocumentNotification("Study guide generation coming soon!", false)
-        return { success: true, message: "Study guide generation coming soon!" }
+        console.log("Generate study guide request received:", JSON.stringify(studyGuideData));
+        
+        if (!studyGuideData || !studyGuideData.title || !Array.isArray(studyGuideData.topics)) {
+          console.error("Invalid study guide data format:", studyGuideData);
+          return { success: false, error: "Study guide data is not in the expected format" };
+        }
+        
+        // Define page size (same as other features)
+        const pageSize = { width: 1200, height: 800 };
+        
+        // Get document root
+        const docRoot = editor.documentRoot;
+        console.log("Document root:", docRoot);
+        
+        // Create a new page for the study guide
+        let studyGuidePage;
+        try {
+          console.log("Creating study guide page");
+          studyGuidePage = docRoot.pages.addPage(pageSize);
+          console.log("Study guide page created:", studyGuidePage);
+        } catch (error) {
+          console.error("Error creating study guide page:", error);
+          return { success: false, error: "Failed to create study guide page" };
+        }
+        
+        // Get the artboard
+        const artboard = studyGuidePage.artboards.first;
+        console.log("Using artboard:", artboard);
+        
+        // Create background
+        const bgRect = editor.createRectangle();
+        bgRect.width = artboard.width;
+        bgRect.height = artboard.height;
+        bgRect.translation = { x: 0, y: 0 };
+        
+        // Use a light purple color for the background (matching other features)
+        const bgColor = { red: 0.97, green: 0.95, blue: 1.0, alpha: 1 };
+        bgRect.fill = editor.makeColorFill(bgColor);
+        
+        // Add to artboard
+        artboard.children.append(bgRect);
+        
+        // Create a header rectangle
+        const headerRect = editor.createRectangle();
+        headerRect.width = artboard.width;
+        headerRect.height = 80;
+        headerRect.translation = { x: 0, y: 0 };
+        
+        // Use a purple color for the header (matching other features)
+        const headerColor = { red: 0.49, green: 0.36, blue: 0.96, alpha: 1 };
+        headerRect.fill = editor.makeColorFill(headerColor);
+        
+        // Add header to artboard
+        artboard.children.append(headerRect);
+        
+        // Create header text
+        const headerText = editor.createText();
+        headerText.fullContent.text = studyGuideData.title || "StudyGenius Study Guide";
+        
+        // Style header text
+        headerText.fullContent.applyCharacterStyles(
+          {
+            fontSize: 30,
+            fontWeight: "bold",
+            color: { red: 1, green: 1, blue: 1, alpha: 1 },
+          },
+          { start: 0, length: headerText.fullContent.text.length },
+        );
+        
+        // Center the header text
+        headerText.textAlignment = constants.TextAlignment.center;
+        
+        // Position header text
+        headerText.translation = { x: 500, y: headerRect.height / 1.5 };
+        
+        // Add header text to artboard
+        artboard.children.append(headerText);
+        
+        // Create a content area (no container with border, just text)
+        const contentText = editor.createText();
+        
+        // Build the full content text
+        let fullContent = "";
+        let currentPosition = 0;
+        const styleRanges = [];
+        
+        // Add each topic with its bullets
+        studyGuideData.topics.forEach((topic, index) => {
+          // Add topic title with newline
+          const topicTitle = `${index + 1}. ${topic.title}\n`;
+          fullContent += topicTitle;
+          
+          // Store style range for title
+          styleRanges.push({
+            start: currentPosition,
+            length: topicTitle.length,
+            style: {
+              fontSize: 24,
+              fontWeight: "bold",
+              color: { red: 0.49, green: 0.36, blue: 0.96, alpha: 1 }
+            }
+          });
+          
+          currentPosition += topicTitle.length;
+          
+          // Add each bullet point with newline
+          if (Array.isArray(topic.bullets)) {
+            topic.bullets.forEach(bullet => {
+              const bulletPoint = `  • ${bullet}\n`;
+              fullContent += bulletPoint;
+              
+              // Store style range for bullet point
+              styleRanges.push({
+                start: currentPosition,
+                length: bulletPoint.length,
+                style: {
+                  fontSize: 18,
+                  color: { red: 0.2, green: 0.2, blue: 0.2, alpha: 1 }
+                }
+              });
+              
+              currentPosition += bulletPoint.length;
+            });
+          }
+          
+          // Add extra newline between topics
+          fullContent += "\n";
+          currentPosition += 1;
+        });
+        
+        // Set the full content
+        contentText.fullContent.text = fullContent;
+        
+        // First apply a base font size to the entire content
+        contentText.fullContent.applyCharacterStyles(
+          { fontSize: 18 },  // Set reasonable default font size
+          { start: 0, length: fullContent.length }
+        );
+        
+        // Apply specific style ranges for titles and bullet points
+        styleRanges.forEach(range => {
+          contentText.fullContent.applyCharacterStyles(
+            range.style,
+            { start: range.start, length: range.length }
+          );
+        });
+        
+        // Set text wrapping with auto-height layout
+        contentText.layout = {
+          type: constants.TextType.autoHeight,
+          width: artboard.width - 80 // Width with margins
+        };
+        
+        // Set alignment
+        contentText.textAlignment = constants.TextAlignment.left;
+        
+        // Position content with margin from header
+        contentText.translation = { 
+          x: 40, 
+          y: headerRect.height + 20
+        };
+        
+        // Add to artboard
+        artboard.children.append(contentText);
+        
+        // Return success without trying to bring page into view
+        return {
+          success: true,
+          message: "Study guide created successfully"
+        };
       } catch (error) {
-        console.error("Error in generateStudyGuide:", error)
-        return { success: false, error: error.message }
+        console.error("Error in generateStudyGuide:", error);
+        return { success: false, error: error.message };
       }
     },
     
