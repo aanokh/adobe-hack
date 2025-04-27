@@ -526,7 +526,10 @@ body {
   gap: 0.5rem;
   cursor: pointer;
   transition: background-color 0.2s;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  z-index: 10;
+  /* Ensure it's above other elements */
 }
 
 .secondary-button:hover {
@@ -613,7 +616,7 @@ body {
 }
 
 .flashcard-answer {
-  margin-top: 1.5rem;
+  margin-top: 0;
   padding-top: 1rem;
   border-top: 1px solid var(--gray-100);
 }

@@ -386,12 +386,31 @@ function start() {
     // Generate quiz (placeholder for future implementation)
     generateQuiz: async (prompt) => {
       try {
-        console.log("Generate quiz request received:", prompt)
-        createDocumentNotification("Quiz generation coming soon!", false)
-        return { success: true, message: "Quiz generation coming soon!" }
+        console.log("Generate quiz request received:", prompt);
+
+        // Create a rectangle
+        const rect = editor.createRectangle();
+
+        // Set its size
+        rect.width = 600;
+        rect.height = 400;
+        rect.translation = { x: 100, y: 100 };
+
+        // Create an image fill
+        const imageFill = editor.makeImageFill("https://wufhalwuhlwauhflu.online/static/latex_1745714077041.png");
+
+        // Set the rectangle's fill to be the image
+        rect.fill = imageFill;
+
+        // Insert into the document
+        const insertionParent = editor.context.insertionParent;
+        insertionParent.children.append(rect);
+
+        console.log("Image rectangle inserted successfully");
+        return { success: true, message: "Image inserted successfully!" };
       } catch (error) {
-        console.error("Error in generateQuiz:", error)
-        return { success: false, error: error.message }
+        console.error("Error inserting image rectangle:", error);
+        return { success: false, error: error.message };
       }
     },
 

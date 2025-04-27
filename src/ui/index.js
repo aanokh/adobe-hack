@@ -373,14 +373,20 @@ addOnUISdk.ready.then(async () => {
 
   // Quizzes functionality
   function setupQuizzes() {
-    const generateQuizButton = document.getElementById("generate-quiz-button")
+    const generateQuizButton = document.getElementById("generate-quiz-button");
 
     if (generateQuizButton) {
-      generateQuizButton.addEventListener("click", () => {
-        animateButtonClick(generateQuizButton)
-        // In a real implementation, this would generate a quiz
-        console.log("Generating quiz...")
-      })
+      generateQuizButton.addEventListener("click", async () => {
+        animateButtonClick(generateQuizButton);
+        console.log("Generating quiz...");
+
+        try {
+          const result = await sandboxProxy.generateQuiz("Test quiz generation");
+          console.log("Result from generateQuiz:", result);
+        } catch (error) {
+          console.error("Error calling generateQuiz:", error);
+        }
+      });
     }
   }
 
