@@ -11,6 +11,152 @@ addOnUISdk.ready.then(async () => {
   // i.e., in the `code.js` file of this add-on.
   const sandboxProxy = await runtime.apiProxy("documentSandbox")
 
+  // Initialize variable to track the last page ID
+  let lastPageId = null;
+
+  // Helper function to shuffle an array
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+  
+  // Store the correct answer index for the current question
+  let currentCorrectAnswerIndex = -1;
+  
+  async function onPageChanged(newId) {
+    console.log("Page switched to:", newId);
+    const quizData = await sandboxProxy.getCurrentQuizQuestion();
+    
+    // Reset any previous answer states
+    const answerButtons = [
+      document.getElementById('quiz-answer-a'),
+      document.getElementById('quiz-answer-b'),
+      document.getElementById('quiz-answer-c'),
+      document.getElementById('quiz-answer-d')
+    ];
+    
+    answerButtons.forEach(btn => {
+      if (btn) {
+        btn.classList.remove('selected', 'correct', 'incorrect');
+        btn.removeAttribute('data-is-correct');
+      }
+    });
+
+    if (quizData && quizData.success && quizData.questionData) {
+      console.log("Current page quiz answers:", {
+        correct: quizData.questionData.correct_answer,
+        wrong1: quizData.questionData.wrong_answer_1,
+        wrong2: quizData.questionData.wrong_answer_2,
+        wrong3: quizData.questionData.wrong_answer_3
+      });
+      
+      // Get the answers container and show it
+      const answersContainer = document.getElementById('quiz-answers-container');
+      if (answersContainer) {
+        answersContainer.classList.remove('hidden');
+      }
+      
+      // If there's a problem URL, render the LaTeX image
+      if (quizData.questionData.problem && quizData.questionData.problem.startsWith('http')) {
+        console.log("Rendering LaTeX image from URL:", quizData.questionData.problem);
+        
+        // Check if we have a quiz-image container
+        let imageContainer = document.getElementById('quiz-image-container');
+        
+        // If not, create one
+        if (!imageContainer) {
+          imageContainer = document.createElement('div');
+          imageContainer.id = 'quiz-image-container';
+          imageContainer.style.textAlign = 'center';
+          imageContainer.style.margin = '1rem 0';
+          imageContainer.style.padding = '0.5rem';
+          imageContainer.style.backgroundColor = '#f9fafb';
+          imageContainer.style.borderRadius = '0.5rem';
+          
+          // Insert it before the answers container
+          if (answersContainer.parentNode) {
+            answersContainer.parentNode.insertBefore(imageContainer, answersContainer);
+          }
+        }
+        
+        // Clear any previous content
+        imageContainer.innerHTML = '';
+        
+        // Create and add an image element
+        const img = document.createElement('img');
+        img.src = quizData.questionData.problem;
+        img.alt = 'LaTeX equation';
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        
+        imageContainer.appendChild(img);
+        
+        // Also try to render the image in the document using our function
+        try {
+          await renderLatexImage(quizData.questionData.problem);
+        } catch (err) {
+          console.error("Failed to render LaTeX image in document:", err);
+        }
+      }
+      
+      // Create an array of answers with their correctness
+      const answers = [
+        { text: quizData.questionData.correct_answer, isCorrect: true },
+        { text: quizData.questionData.wrong_answer_1, isCorrect: false },
+        { text: quizData.questionData.wrong_answer_2, isCorrect: false },
+        { text: quizData.questionData.wrong_answer_3, isCorrect: false }
+      ];
+      
+      // Shuffle the answers
+      const shuffledAnswers = shuffleArray(answers);
+      
+      // Update the answer buttons with the shuffled answers
+      for (let i = 0; i < answerButtons.length; i++) {
+        const button = answerButtons[i];
+        if (button && i < shuffledAnswers.length) {
+          button.textContent = shuffledAnswers[i].text;
+          button.setAttribute('data-is-correct', shuffledAnswers[i].isCorrect);
+          
+          // Store the index of the correct answer
+          if (shuffledAnswers[i].isCorrect) {
+            currentCorrectAnswerIndex = i;
+          }
+        }
+      }
+    } else {
+      console.log("No quiz data available for current page");
+      
+      // Hide the answers container if no quiz data
+      const answersContainer = document.getElementById('quiz-answers-container');
+      if (answersContainer) {
+        answersContainer.classList.add('hidden');
+      }
+      
+      // Hide the image container if it exists
+      const imageContainer = document.getElementById('quiz-image-container');
+      if (imageContainer) {
+        imageContainer.classList.add('hidden');
+      }
+    }
+  }
+  
+  // Start polling for page changes and quiz data
+  window.setInterval(async () => {
+    try {
+      const currentId = await sandboxProxy.getCurrentPageId();
+      
+      if (currentId !== lastPageId) {
+        lastPageId = currentId;
+        await onPageChanged(currentId);
+      }
+    } catch (err) {
+      console.error("Polling error:", err);
+    }
+  }, 500);
+
   // Set up animation for button click
   const animateButtonClick = (button) => {
     button.style.transform = "scale(0.95)"
@@ -403,9 +549,14 @@ addOnUISdk.ready.then(async () => {
       ];
       
       // Add click event to each button
-      answerButtons.forEach(button => {
+      answerButtons.forEach((button, index) => {
         if (button) {
           button.addEventListener('click', () => {
+            // If user already selected an answer, don't allow changes
+            if (answerButtons.some(btn => btn && (btn.classList.contains('correct') || btn.classList.contains('incorrect')))) {
+              return;
+            }
+            
             // Remove selection from all buttons
             answerButtons.forEach(btn => {
               if (btn) btn.classList.remove('selected');
@@ -414,8 +565,58 @@ addOnUISdk.ready.then(async () => {
             // Add selection to clicked button
             button.classList.add('selected');
             
-            // For future implementation: Check if answer is correct
-            // This will be connected to the quiz data stored in the sandbox
+            // Check if answer is correct
+            const isCorrect = button.getAttribute('data-is-correct') === 'true';
+            
+            // Show feedback
+            if (isCorrect) {
+              button.classList.add('correct');
+              
+              // Success feedback
+              const feedbackText = document.createElement('div');
+              feedbackText.className = 'feedback-text correct';
+              feedbackText.textContent = '✓ Correct!';
+              button.appendChild(feedbackText);
+              
+              // Remove the feedback text after 3 seconds
+              setTimeout(() => {
+                if (feedbackText && feedbackText.parentNode) {
+                  feedbackText.parentNode.removeChild(feedbackText);
+                }
+              }, 3000);
+            } else {
+              button.classList.add('incorrect');
+              
+              // Error feedback
+              const feedbackText = document.createElement('div');
+              feedbackText.className = 'feedback-text incorrect';
+              feedbackText.textContent = '✗ Incorrect';
+              button.appendChild(feedbackText);
+              
+              // Highlight the correct answer
+              if (currentCorrectAnswerIndex >= 0 && currentCorrectAnswerIndex < answerButtons.length) {
+                const correctButton = answerButtons[currentCorrectAnswerIndex];
+                if (correctButton) {
+                  correctButton.classList.add('correct');
+                  
+                  // Show correct answer feedback
+                  const correctFeedback = document.createElement('div');
+                  correctFeedback.className = 'feedback-text correct';
+                  correctFeedback.textContent = '✓ Correct Answer';
+                  correctButton.appendChild(correctFeedback);
+                  
+                  // Remove the feedback texts after 3 seconds
+                  setTimeout(() => {
+                    if (feedbackText && feedbackText.parentNode) {
+                      feedbackText.parentNode.removeChild(feedbackText);
+                    }
+                    if (correctFeedback && correctFeedback.parentNode) {
+                      correctFeedback.parentNode.removeChild(correctFeedback);
+                    }
+                  }, 3000);
+                }
+              }
+            }
           });
         }
       });
@@ -535,12 +736,8 @@ addOnUISdk.ready.then(async () => {
               if (result.success && fileName) {
                 fileName.textContent = `Created ${result.pageCount} quiz questions successfully!`;
                 
-                // Show the answer buttons and update their text
+                // Show the answer buttons
                 document.getElementById('quiz-answers-container').classList.remove('hidden');
-                document.getElementById('quiz-answer-a').textContent = 'Option A';
-                document.getElementById('quiz-answer-b').textContent = 'Option B';
-                document.getElementById('quiz-answer-c').textContent = 'Option C';
-                document.getElementById('quiz-answer-d').textContent = 'Option D';
               }
             } else {
               console.log("No quiz problems received");
@@ -798,6 +995,30 @@ addOnUISdk.ready.then(async () => {
   }
 
   // Buttons are now permanently visible, so no need for a toggle function
+  
+  // Function to render LaTeX image in the document
+  async function renderLatexImage(latexImageUrl) {
+    try {
+      // STEP 1: Use the provided LaTeX rendered image URL
+      const svgUrl = latexImageUrl;
+      
+      // STEP 2: Fetch the SVG as a Blob
+      const response = await fetch(svgUrl, { mode: "cors" });
+      const blob = await response.blob();
+      
+      // STEP 3: Insert into Adobe Express document
+      await addOnUISdk.app.document.addImage(blob, {
+        title: "LaTeX Equation",
+        author: "StudyGenius",
+      });
+      
+      console.log("LaTeX image inserted into the canvas successfully!");
+      return true;
+    } catch (error) {
+      console.error("Error inserting LaTeX image:", error);
+      return false;
+    }
+  }
   
   // Initialize all functionality
   function init() {

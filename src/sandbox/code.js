@@ -865,6 +865,24 @@ function start() {
     },
   }
 
+  // Add getCurrentPageId function to get the current page ID for polling
+  sandboxApi.getCurrentPageId = async () => {
+    try {
+      // Get the current page
+      const currentPage = editor.context.currentPage;
+      if (!currentPage) {
+        console.log("No current page found");
+        return null;
+      }
+      
+      // Return the page ID
+      return currentPage.id;
+    } catch (error) {
+      console.error("Error getting current page ID:", error);
+      return null;
+    }
+  };
+
   // Expose `sandboxApi` to the UI runtime.
   runtime.exposeApi(sandboxApi)
 }
