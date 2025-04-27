@@ -19,9 +19,6 @@ function start() {
         y: 100,
       }
 
-      const bgColor = isError 
-        ? { red: 0.9, green: 0.3, blue: 0.3, alpha: 1 } 
-        : { red: 0.49, green: 0.36, blue: 0.96, alpha: 1 }
       container.fill = editor.makeColorFill(bgColor)
 
       // Add text
@@ -43,7 +40,7 @@ function start() {
         type: constants.TextType.autoHeight,
         width: 550 // Slightly less than container width to provide margin
       }
-      
+
       textNode.textAlignment = constants.TextAlignment.center
 
       // Position text in center of container
@@ -203,7 +200,7 @@ function start() {
           )
 
           // Position header text
-          headerText.translation = { x: 30, y: headerRect.height/4}
+          headerText.translation = { x: 245, y: headerRect.height / 1.5 }
 
           // Add header text to artboard
           artboard.children.append(headerText)
@@ -310,8 +307,8 @@ function start() {
 
             // Position counter text
             counterText.translation = {
-              x: artboard.width / 2 - 100,
-              y: artboard.height - 60,
+              x: 150,
+              y: artboard.height - 40,
             }
 
             // Add to artboard
