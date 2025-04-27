@@ -71,10 +71,13 @@ function start() {
         y: 20, // Top margin
       }
 
-      // Add to document
-      const insertionParent = editor.context.insertionParent
-      insertionParent.children.append(container)
-      insertionParent.children.append(textNode)
+      // Append directly to the current artboard
+      const docRoot = editor.documentRoot;
+      const currentPage = docRoot.pages.item(docRoot.pages.length - 1); // Last page created
+      const artboard = currentPage.artboards.first;
+
+      artboard.children.append(container);
+      artboard.children.append(textNode);
 
       // Set a timeout to remove the notification after 5 seconds
       setTimeout(() => {
@@ -122,11 +125,11 @@ function start() {
         textNode.textAlignment = constants.TextAlignment.left
 
         // Position text in the document
-        const insertionParent = editor.context.insertionParent
-        textNode.translation = { x: 20, y: 40 }
+        const docRoot = editor.documentRoot;
+        const currentPage = docRoot.pages.item(docRoot.pages.length - 1);
+        const artboard = currentPage.artboards.first;
 
-        // Add to document
-        insertionParent.children.append(textNode)
+        artboard.children.append(textNode);
 
         console.log("Text added with fullContent API and auto-wrap enabled")
         return textNode
@@ -483,9 +486,12 @@ function start() {
             contentTextX = 50; // Left margin
           }
 
-          // Create the content text
+          // Prepare and wrap the content text
+          const rawContent = slide.content || "";
+          const wrappedContent = wrapText(rawContent, 70); // Use the same wrapText function, maybe 70 chars for slides
+
           const contentText = editor.createText();
-          contentText.fullContent.text = slide.content || "";
+          contentText.fullContent.text = wrappedContent;
 
           // Apply styling to content
           contentText.fullContent.applyCharacterStyles(
@@ -493,23 +499,19 @@ function start() {
               fontSize: 20,
               color: { red: 0.2, green: 0.2, blue: 0.2, alpha: 1 },
             },
-            { start: 0, length: contentText.fullContent.text.length }
+            { start: 0, length: wrappedContent.length }
           );
 
-          // Set text wrapping with auto-height layout
-          contentText.layout = {
-            type: constants.TextType.autoHeight,
-            width: contentTextWidth // Width with margins, adjusted based on image presence
-          };
+          // ❌ REMOVE THIS:
+          // contentText.layout = { type: ..., width: ... };
 
-          // Set alignment
+          // ✅ Set textAlignment and translation only
           contentText.textAlignment = constants.TextAlignment.left;
 
           // Position text - if image exists, position it in bottom left
-          // otherwise position below header
           const contentYPosition = slide.image ?
-            Math.floor(artboard.height / 2) + 20 : // Below the middle of the slide for text when image exists
-            headerRect.height + 40; // Just below header when no image
+            Math.floor(artboard.height / 2) + 20 :
+            headerRect.height + 40;
 
           contentText.translation = { x: contentTextX, y: contentYPosition };
 
@@ -916,18 +918,16 @@ function start() {
         // Create a content area (no container with border, just text)
         const contentText = editor.createText();
 
-        // Build the full content text
-        let fullContent = "";
+        // Build the full raw content text
+        let rawFullContent = "";
         let currentPosition = 0;
         const styleRanges = [];
 
         // Add each topic with its bullets
         studyGuideData.topics.forEach((topic, index) => {
-          // Add topic title with newline
           const topicTitle = `${index + 1}. ${topic.title}\n`;
-          fullContent += topicTitle;
+          rawFullContent += topicTitle;
 
-          // Store style range for title
           styleRanges.push({
             start: currentPosition,
             length: topicTitle.length,
@@ -940,13 +940,11 @@ function start() {
 
           currentPosition += topicTitle.length;
 
-          // Add each bullet point with newline
           if (Array.isArray(topic.bullets)) {
             topic.bullets.forEach(bullet => {
               const bulletPoint = `  • ${bullet}\n`;
-              fullContent += bulletPoint;
+              rawFullContent += bulletPoint;
 
-              // Store style range for bullet point
               styleRanges.push({
                 start: currentPosition,
                 length: bulletPoint.length,
@@ -960,21 +958,23 @@ function start() {
             });
           }
 
-          // Add extra newline between topics
-          fullContent += "\n";
+          rawFullContent += "\n";
           currentPosition += 1;
         });
 
-        // Set the full content
-        contentText.fullContent.text = fullContent;
+        // ✅ Manually wrap the text instead of using layout
+        const wrappedContent = wrapText(rawFullContent, 140); // wrap every ~70 characters
 
-        // First apply a base font size to the entire content
+        // Set the wrapped text content
+        contentText.fullContent.text = wrappedContent;
+
+        // Apply a base font size to the entire wrapped content
         contentText.fullContent.applyCharacterStyles(
-          { fontSize: 18 },  // Set reasonable default font size
-          { start: 0, length: fullContent.length }
+          { fontSize: 18 },
+          { start: 0, length: wrappedContent.length }
         );
 
-        // Apply specific style ranges for titles and bullet points
+        // Re-apply style ranges for topics and bullet points
         styleRanges.forEach(range => {
           contentText.fullContent.applyCharacterStyles(
             range.style,
@@ -982,23 +982,17 @@ function start() {
           );
         });
 
-        // Set text wrapping with auto-height layout
-        contentText.layout = {
-          type: constants.TextType.autoHeight,
-          width: artboard.width - 80 // Width with margins
-        };
-
-        // Set alignment
+        // ❌ REMOVE layout completely (no experimental API)
+        // Set text alignment and position normally
         contentText.textAlignment = constants.TextAlignment.left;
-
-        // Position content with margin from header
         contentText.translation = {
           x: 40,
           y: headerRect.height + 20
         };
 
-        // Add to artboard
+        // ✅ Add to artboard
         artboard.children.append(contentText);
+
 
         // Return success without trying to bring page into view
         return {
@@ -1022,7 +1016,8 @@ function start() {
         }
 
         // Get the current page
-        const currentPage = editor.context.currentPage;
+        const docRoot = editor.documentRoot;
+        const currentPage = docRoot.pages.item(docRoot.pages.length - 1); // Latest page
         if (!currentPage) {
           console.log("No current page found");
           return { success: false, error: "No current page available" };
@@ -1198,7 +1193,8 @@ function start() {
         console.log("Show answer function called");
 
         // Get the current page
-        const page = editor.context.currentPage;
+        const docRoot = editor.documentRoot;
+        const page = docRoot.pages.item(docRoot.pages.length - 1); // Latest page
         let foundAnswerNode = false;
 
         // Iterate every artboard on the page…
@@ -1234,7 +1230,8 @@ function start() {
   sandboxApi.getCurrentPageId = async () => {
     try {
       // Get the current page
-      const currentPage = editor.context.currentPage;
+      const docRoot = editor.documentRoot;
+      const currentPage = docRoot.pages.item(docRoot.pages.length - 1); // Latest page
       if (!currentPage) {
         console.log("No current page found");
         return null;
@@ -1397,35 +1394,31 @@ function start() {
         const textNode = editor.createText();
 
         // Build the full content with bullet points
-        let fullContent = "";
+        let rawFullContent = "";
 
-        // Add each title as a bullet point
         outlineData.titles.forEach((title) => {
-          fullContent += `• ${title}\n\n`;
+          rawFullContent += `• ${title}\n\n`;
         });
 
-        // Set the text content
-        textNode.fullContent.text = fullContent;
+        const wrappedContent = wrapText(rawFullContent, 70);
 
-        // Apply basic styling to the entire text
+        // Set the text content
+        textNode.fullContent.text = wrappedContent;
+
+        // Apply basic styling
         textNode.fullContent.applyCharacterStyles(
           {
             fontSize: 24,
             color: { red: 0.2, green: 0.2, blue: 0.2, alpha: 1 },
           },
-          { start: 0, length: fullContent.length }
+          { start: 0, length: wrappedContent.length }
         );
 
-        // Set text to auto-height layout for wrapping
-        textNode.layout = {
-          type: constants.TextType.autoHeight,
-          width: artboard.width - 100 // Width with margins
-        };
+        // ❌ REMOVE:
+        // textNode.layout = {...};
 
-        // Set alignment
+        // ✅ Keep
         textNode.textAlignment = constants.TextAlignment.left;
-
-        // Position below header with some margin
         textNode.translation = { x: 50, y: headerRect.height + 40 };
 
         // Add to artboard
@@ -1433,7 +1426,10 @@ function start() {
 
         // Create a footer with a friendly message
         const footerText = editor.createText();
-        footerText.fullContent.text = "This outline can be used to generate presentation slides. Click 'Generate Slides' to continue.";
+        const footerRawText = "This outline can be used to generate presentation slides. Click 'Generate Slides' to continue.";
+        const wrappedFooter = wrapText(footerRawText, 70);
+
+        footerText.fullContent.text = wrappedFooter;
 
         // Style footer text
         footerText.fullContent.applyCharacterStyles(
@@ -1442,16 +1438,16 @@ function start() {
             fontStyle: "italic",
             color: { red: 0.4, green: 0.4, blue: 0.4, alpha: 1 },
           },
-          { start: 0, length: footerText.fullContent.text.length }
+          { start: 0, length: wrappedFooter.length }
         );
 
-        // Set alignment and position at bottom of page
+        // ❌ REMOVE:
+        // footerText.layout = {...};
+
+        // ✅ Keep
         footerText.textAlignment = constants.TextAlignment.center;
-        footerText.layout = {
-          type: constants.TextType.autoHeight,
-          width: artboard.width - 200
-        };
         footerText.translation = { x: 100, y: artboard.height - 50 };
+
 
         // Add footer to artboard
         artboard.children.append(footerText);
