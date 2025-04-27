@@ -830,8 +830,10 @@ body {
 .quiz-answers {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 2rem; /* Significantly increased spacing between buttons */
   width: 100%;
+  margin-bottom: 2rem; /* More space at the bottom */
+  margin-top: 1rem; /* Space at the top too */
 }
 
 .quiz-answer-button {
@@ -873,10 +875,17 @@ body {
   color: #991b1b; /* Dark red */
 }
 
-/* Feedback text for answers */
+/* Feedback container and text for answers */
+.feedback-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 6px;
+  width: 100%;
+}
+
 .feedback-text {
   display: inline-block;
-  margin-left: 10px;
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 0.85em;
@@ -892,6 +901,24 @@ body {
 .feedback-text.incorrect {
   background-color: #fee2e2;
   color: #991b1b;
+}
+
+/* Style for quiz answer buttons with images */
+.quiz-answer-button img {
+  display: block;
+  margin: 0 auto;
+  width: 95%; /* Nearly full width */
+  object-fit: contain;
+}
+
+/* Add more padding to quiz answer buttons to accommodate images */
+.quiz-answer-button {
+  padding: 16px 20px; /* Generous padding */
+  min-height: 150px; /* Significantly taller for larger images */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes fadeIn {

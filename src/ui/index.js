@@ -71,10 +71,11 @@ addOnUISdk.ready.then(async () => {
           imageContainer = document.createElement('div');
           imageContainer.id = 'quiz-image-container';
           imageContainer.style.textAlign = 'center';
-          imageContainer.style.margin = '1rem 0';
-          imageContainer.style.padding = '0.5rem';
+          imageContainer.style.margin = '1.5rem 0';
+          imageContainer.style.padding = '1rem';
           imageContainer.style.backgroundColor = '#f9fafb';
           imageContainer.style.borderRadius = '0.5rem';
+          imageContainer.style.minHeight = '120px'; // Ensure there's enough space
           
           // Insert it before the answers container
           if (answersContainer.parentNode) {
@@ -89,8 +90,10 @@ addOnUISdk.ready.then(async () => {
         const img = document.createElement('img');
         img.src = quizData.questionData.problem;
         img.alt = 'LaTeX equation';
-        img.style.maxWidth = '100%';
+        img.style.width = '90%'; // Large but not full width
         img.style.height = 'auto';
+        img.style.maxHeight = 'none'; // No height restriction
+        img.style.margin = '20px 0'; // Add generous vertical spacing
         
         imageContainer.appendChild(img);
         
@@ -104,10 +107,10 @@ addOnUISdk.ready.then(async () => {
       
       // Create an array of answers with their correctness
       const answers = [
-        { text: quizData.questionData.correct_answer, isCorrect: true },
-        { text: quizData.questionData.wrong_answer_1, isCorrect: false },
-        { text: quizData.questionData.wrong_answer_2, isCorrect: false },
-        { text: quizData.questionData.wrong_answer_3, isCorrect: false }
+        { content: quizData.questionData.correct_answer, isCorrect: true },
+        { content: quizData.questionData.wrong_answer_1, isCorrect: false },
+        { content: quizData.questionData.wrong_answer_2, isCorrect: false },
+        { content: quizData.questionData.wrong_answer_3, isCorrect: false }
       ];
       
       // Shuffle the answers
@@ -117,7 +120,29 @@ addOnUISdk.ready.then(async () => {
       for (let i = 0; i < answerButtons.length; i++) {
         const button = answerButtons[i];
         if (button && i < shuffledAnswers.length) {
-          button.textContent = shuffledAnswers[i].text;
+          // Clear any previous content
+          button.innerHTML = '';
+          
+          const answerContent = shuffledAnswers[i].content;
+          
+          // Check if the answer content is a URL (for LaTeX images)
+          if (typeof answerContent === 'string' && answerContent.startsWith('http')) {
+            // Create an image element for the LaTeX
+            const img = document.createElement('img');
+            img.src = answerContent;
+            img.alt = `Option ${String.fromCharCode(65 + i)}`; // A, B, C, D
+            img.style.width = '95%'; // Almost full width
+            img.style.height = 'auto';
+            img.style.maxHeight = 'none'; // No height restriction
+            img.style.margin = '8px 0'; // Add vertical spacing
+            
+            // Add the image to the button
+            button.appendChild(img);
+          } else {
+            // Regular text answer
+            button.textContent = answerContent;
+          }
+          
           button.setAttribute('data-is-correct', shuffledAnswers[i].isCorrect);
           
           // Store the index of the correct answer
@@ -572,26 +597,40 @@ addOnUISdk.ready.then(async () => {
             if (isCorrect) {
               button.classList.add('correct');
               
+              // Create feedback container
+              const feedbackContainer = document.createElement('div');
+              feedbackContainer.className = 'feedback-container';
+              
               // Success feedback
               const feedbackText = document.createElement('div');
               feedbackText.className = 'feedback-text correct';
               feedbackText.textContent = '✓ Correct!';
-              button.appendChild(feedbackText);
+              feedbackContainer.appendChild(feedbackText);
+              
+              // Add feedback container to button
+              button.appendChild(feedbackContainer);
               
               // Remove the feedback text after 3 seconds
               setTimeout(() => {
-                if (feedbackText && feedbackText.parentNode) {
-                  feedbackText.parentNode.removeChild(feedbackText);
+                if (feedbackContainer && feedbackContainer.parentNode) {
+                  feedbackContainer.parentNode.removeChild(feedbackContainer);
                 }
               }, 3000);
             } else {
               button.classList.add('incorrect');
               
+              // Create feedback container
+              const feedbackContainer = document.createElement('div');
+              feedbackContainer.className = 'feedback-container';
+              
               // Error feedback
               const feedbackText = document.createElement('div');
               feedbackText.className = 'feedback-text incorrect';
               feedbackText.textContent = '✗ Incorrect';
-              button.appendChild(feedbackText);
+              feedbackContainer.appendChild(feedbackText);
+              
+              // Add feedback container to button
+              button.appendChild(feedbackContainer);
               
               // Highlight the correct answer
               if (currentCorrectAnswerIndex >= 0 && currentCorrectAnswerIndex < answerButtons.length) {
@@ -599,19 +638,26 @@ addOnUISdk.ready.then(async () => {
                 if (correctButton) {
                   correctButton.classList.add('correct');
                   
+                  // Create feedback container for correct answer
+                  const correctFeedbackContainer = document.createElement('div');
+                  correctFeedbackContainer.className = 'feedback-container';
+                  
                   // Show correct answer feedback
                   const correctFeedback = document.createElement('div');
                   correctFeedback.className = 'feedback-text correct';
                   correctFeedback.textContent = '✓ Correct Answer';
-                  correctButton.appendChild(correctFeedback);
+                  correctFeedbackContainer.appendChild(correctFeedback);
                   
-                  // Remove the feedback texts after 3 seconds
+                  // Add feedback container to correct button
+                  correctButton.appendChild(correctFeedbackContainer);
+                  
+                  // Remove the feedback containers after 3 seconds
                   setTimeout(() => {
-                    if (feedbackText && feedbackText.parentNode) {
-                      feedbackText.parentNode.removeChild(feedbackText);
+                    if (feedbackContainer && feedbackContainer.parentNode) {
+                      feedbackContainer.parentNode.removeChild(feedbackContainer);
                     }
-                    if (correctFeedback && correctFeedback.parentNode) {
-                      correctFeedback.parentNode.removeChild(correctFeedback);
+                    if (correctFeedbackContainer && correctFeedbackContainer.parentNode) {
+                      correctFeedbackContainer.parentNode.removeChild(correctFeedbackContainer);
                     }
                   }, 3000);
                 }
