@@ -155,9 +155,9 @@
         <!-- File Upload -->
         <div class="section">
           <label class="label">Upload reference materials</label>
-          <div class="upload-container" id="flashcards-upload-container">
-            <input type="file" id="file-input" class="file-input">
-            <label for="file-input" class="upload-label">
+          <div class="upload-container" id="slides-upload-container">
+            <input type="file" id="slides-file-input" class="file-input">
+            <label for="slides-file-input" class="upload-label">
               <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -168,8 +168,9 @@
               <p class="upload-subtext">PDF, PPTX, DOCX, Images</p>
             </label>
           </div>
-          <div id="slides-files-list" class="files-list"></div>
+          <p id="slides-file-name" class="file-name"></p> <!-- ✅ Add this new line -->
         </div>
+
 
         <!-- Style Options -->
         <div class="section">
@@ -337,9 +338,9 @@
           <!-- File Upload -->
           <div class="section">
             <label class="label">Upload reference materials</label>
-            <div class="upload-container" id="flashcards-upload-container">
-              <input type="file" id="file-input" class="file-input">
-              <label for="file-input" class="upload-label">
+            <div class="upload-container" id="quizzes-upload-container">
+              <input type="file" id="quizzes-file-input" class="file-input">
+              <label for="quizzes-file-input" class="upload-label">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -350,6 +351,7 @@
                 <p class="upload-subtext">PDF, PPTX, DOCX, Images</p>
               </label>
             </div>
+            <p id="quizzes-file-name" class="file-name"></p> <!-- This is the thing to show "Selected: ..." -->
           </div>
 
           <!-- Generate Button -->
@@ -395,7 +397,7 @@
           <div class="section">
             <label class="label">Upload reference materials</label>
             <div class="upload-container" id="studyguide-upload-container">
-              <input type="file" id="studyguide-file-input" class="file-input" multiple>
+              <input type="file" id="studyguide-file-input" class="file-input">
               <label for="studyguide-file-input" class="upload-label">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none"
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -407,7 +409,7 @@
                 <p class="upload-subtext">PDF, PPTX, DOCX, Images</p>
               </label>
             </div>
-            <div id="studyguide-files-list" class="files-list"></div>
+            <p id="studyguide-file-name" class="file-name"></p> <!-- ✅ Add this new -->
           </div>
 
           <!-- Generate Button -->

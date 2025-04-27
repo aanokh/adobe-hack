@@ -87,7 +87,7 @@ addOnUISdk.ready.then(async () => {
     const uploadContainer = document.getElementById("upload-container")
 
     let selectedFile = null
-    
+
     // Set up show answer button
     if (showAnswerButton) {
       showAnswerButton.addEventListener("click", () => {
@@ -95,7 +95,7 @@ addOnUISdk.ready.then(async () => {
         showAnswer()
       })
     }
-    
+
     // Function to show answer by setting opacity to 1
     async function showAnswer() {
       console.log("Show answer button clicked")
@@ -392,48 +392,349 @@ addOnUISdk.ready.then(async () => {
     }
   }
 
-  // Quizzes functionality
   function setupQuizzes() {
+    const fileInput = document.getElementById("quizzes-file-input");
+    const fileName = document.getElementById("quizzes-file-name");
     const generateQuizButton = document.getElementById("generate-quiz-button");
+    const uploadContainer = document.getElementById("quizzes-upload-container");
 
+    let selectedFile = null;
+
+    // Handle file selection
+    if (fileInput) {
+      fileInput.addEventListener("change", (event) => {
+        selectedFile = event.target.files[0];
+        if (selectedFile && fileName) {
+          fileName.textContent = `Selected: ${selectedFile.name}`;
+          generateQuizButton.style.display = "block"; // optional if you want to hide button initially
+        }
+      });
+    }
+
+    // Handle drag and drop
+    if (uploadContainer) {
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        uploadContainer.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        uploadContainer.addEventListener(eventName, highlight, false);
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        uploadContainer.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight() {
+        uploadContainer.style.borderColor = "#a78bfa";
+        uploadContainer.style.backgroundColor = "rgba(167, 139, 250, 0.1)";
+      }
+
+      function unhighlight() {
+        uploadContainer.style.borderColor = "#e5e7eb";
+        uploadContainer.style.backgroundColor = "";
+      }
+
+      uploadContainer.addEventListener("drop", handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        selectedFile = dt.files[0];
+        if (selectedFile && fileName) {
+          fileName.textContent = `Selected: ${selectedFile.name}`;
+          generateQuizButton.style.display = "block";
+        }
+      }
+    }
+
+    // Handle "Generate Quiz" button click
     if (generateQuizButton) {
       generateQuizButton.addEventListener("click", async () => {
         animateButtonClick(generateQuizButton);
         console.log("Generating quiz...");
 
+        if (!selectedFile) {
+          console.error("No file selected for quiz generation.");
+          return;
+        }
+
         try {
-          const result = await sandboxProxy.generateQuiz("Test quiz generation");
-          console.log("Result from generateQuiz:", result);
+          generateQuizButton.disabled = true;
+          generateQuizButton.textContent = "Uploading...";
+
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+
+          const promptInput = document.getElementById("quizzes-prompt");
+          const promptText = promptInput ? promptInput.value : "";
+
+          formData.append("description", JSON.stringify({
+            prompt: promptText || "Generate a quiz from this file",
+          }));
+
+          const response = await fetch("https://wufhalwuhlwauhflu.online/generate-quiz", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (response.ok) {
+            const responseData = await response.json();
+            console.log("Quiz data received:", responseData);
+
+            if (fileName) {
+              fileName.textContent = "Quiz generated successfully!";
+              fileName.style.color = "green";
+            }
+          } else {
+            throw new Error(`Server responded with status ${response.status}`);
+          }
         } catch (error) {
-          console.error("Error calling generateQuiz:", error);
+          console.error("Failed to generate quiz:", error);
+          if (fileName) {
+            fileName.textContent = "Quiz generation failed: " + error.message;
+            fileName.style.color = "red";
+          }
+        } finally {
+          generateQuizButton.disabled = false;
+          generateQuizButton.textContent = "Generate Quiz";
         }
       });
     }
   }
 
-  // Study Guide functionality
   function setupStudyGuide() {
-    const generateStudyGuideButton = document.getElementById("generate-studyguide-button")
+    const fileInput = document.getElementById("studyguide-file-input");
+    const fileName = document.getElementById("studyguide-file-name");
+    const generateStudyGuideButton = document.getElementById("generate-studyguide-button");
+    const uploadContainer = document.getElementById("studyguide-upload-container");
 
+    let selectedFile = null;
+
+    // Handle file selection
+    if (fileInput) {
+      fileInput.addEventListener("change", (event) => {
+        selectedFile = event.target.files[0];
+        if (selectedFile && fileName) {
+          fileName.textContent = `Selected: ${selectedFile.name}`;
+          generateStudyGuideButton.style.display = "block";
+        }
+      });
+    }
+
+    // Handle drag and drop
+    if (uploadContainer) {
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        uploadContainer.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        uploadContainer.addEventListener(eventName, highlight, false);
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        uploadContainer.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight() {
+        uploadContainer.style.borderColor = "#a78bfa";
+        uploadContainer.style.backgroundColor = "rgba(167, 139, 250, 0.1)";
+      }
+
+      function unhighlight() {
+        uploadContainer.style.borderColor = "#e5e7eb";
+        uploadContainer.style.backgroundColor = "";
+      }
+
+      uploadContainer.addEventListener("drop", handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        selectedFile = dt.files[0];
+        if (selectedFile && fileName) {
+          fileName.textContent = `Selected: ${selectedFile.name}`;
+          generateStudyGuideButton.style.display = "block";
+        }
+      }
+    }
+
+    // Handle "Generate Study Guide" button click
     if (generateStudyGuideButton) {
-      generateStudyGuideButton.addEventListener("click", () => {
-        animateButtonClick(generateStudyGuideButton)
-        // In a real implementation, this would generate a study guide
-        console.log("Generating study guide...")
-      })
+      generateStudyGuideButton.addEventListener("click", async () => {
+        animateButtonClick(generateStudyGuideButton);
+        console.log("Generating study guide...");
+
+        if (!selectedFile) {
+          console.error("No file selected for study guide generation.");
+          return;
+        }
+
+        try {
+          generateStudyGuideButton.disabled = true;
+          generateStudyGuideButton.textContent = "Uploading...";
+
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+
+          const promptInput = document.getElementById("studyguide-prompt");
+          const promptText = promptInput ? promptInput.value : "";
+
+          formData.append("description", JSON.stringify({
+            prompt: promptText || "Generate a study guide from this file",
+          }));
+
+          const response = await fetch("https://wufhalwuhlwauhflu.online/generate-studyguide", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (response.ok) {
+            const responseData = await response.json();
+            console.log("Study guide data received:", responseData);
+
+            if (fileName) {
+              fileName.textContent = "Study guide generated successfully!";
+              fileName.style.color = "green";
+            }
+          } else {
+            throw new Error(`Server responded with status ${response.status}`);
+          }
+        } catch (error) {
+          console.error("Failed to generate study guide:", error);
+          if (fileName) {
+            fileName.textContent = "Study guide generation failed: " + error.message;
+            fileName.style.color = "red";
+          }
+        } finally {
+          generateStudyGuideButton.disabled = false;
+          generateStudyGuideButton.textContent = "Generate Study Guide";
+        }
+      });
     }
   }
 
-  // Slides functionality
   function setupSlides() {
-    const generateSlidesButton = document.getElementById("generate-slides-button")
+    const fileInput = document.getElementById("slides-file-input");
+    const fileName = document.getElementById("slides-file-name");
+    const generateSlidesButton = document.getElementById("generate-slides-button");
+    const uploadContainer = document.getElementById("slides-upload-container");
 
+    let selectedFile = null;
+
+    // Handle file selection
+    if (fileInput) {
+      fileInput.addEventListener("change", (event) => {
+        selectedFile = event.target.files[0];
+        if (selectedFile && fileName) {
+          fileName.textContent = `Selected: ${selectedFile.name}`;
+          generateSlidesButton.style.display = "block";
+        }
+      });
+    }
+
+    // Handle drag and drop
+    if (uploadContainer) {
+      ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+        uploadContainer.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        uploadContainer.addEventListener(eventName, highlight, false);
+      });
+
+      ["dragleave", "drop"].forEach((eventName) => {
+        uploadContainer.addEventListener(eventName, unhighlight, false);
+      });
+
+      function highlight() {
+        uploadContainer.style.borderColor = "#a78bfa";
+        uploadContainer.style.backgroundColor = "rgba(167, 139, 250, 0.1)";
+      }
+
+      function unhighlight() {
+        uploadContainer.style.borderColor = "#e5e7eb";
+        uploadContainer.style.backgroundColor = "";
+      }
+
+      uploadContainer.addEventListener("drop", handleDrop, false);
+
+      function handleDrop(e) {
+        const dt = e.dataTransfer;
+        selectedFile = dt.files[0];
+        if (selectedFile && fileName) {
+          fileName.textContent = `Selected: ${selectedFile.name}`;
+          generateSlidesButton.style.display = "block";
+        }
+      }
+    }
+
+    // Handle "Generate Slides" button click
     if (generateSlidesButton) {
-      generateSlidesButton.addEventListener("click", () => {
-        animateButtonClick(generateSlidesButton)
-        // In a real implementation, this would generate slides
-        console.log("Generating slides...")
-      })
+      generateSlidesButton.addEventListener("click", async () => {
+        animateButtonClick(generateSlidesButton);
+        console.log("Generating slides...");
+
+        if (!selectedFile) {
+          console.error("No file selected for slides generation.");
+          return;
+        }
+
+        try {
+          generateSlidesButton.disabled = true;
+          generateSlidesButton.textContent = "Uploading...";
+
+          const formData = new FormData();
+          formData.append("file", selectedFile);
+
+          const promptInput = document.getElementById("slides-prompt");
+          const promptText = promptInput ? promptInput.value : "";
+
+          formData.append("description", JSON.stringify({
+            prompt: promptText || "Generate slides from this file",
+          }));
+
+          // 🚀 Correct backend endpoint you mentioned for slides
+          const response = await fetch("https://wufhalwuhlwauhflu.online/generate-outline", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (response.ok) {
+            const responseData = await response.json();
+            console.log("Slides data received:", responseData);
+
+            if (fileName) {
+              fileName.textContent = "Slides generated successfully!";
+              fileName.style.color = "green";
+            }
+          } else {
+            throw new Error(`Server responded with status ${response.status}`);
+          }
+        } catch (error) {
+          console.error("Failed to generate slides:", error);
+          if (fileName) {
+            fileName.textContent = "Slides generation failed: " + error.message;
+            fileName.style.color = "red";
+          }
+        } finally {
+          generateSlidesButton.disabled = false;
+          generateSlidesButton.textContent = "Generate Slides";
+        }
+      });
     }
   }
 
