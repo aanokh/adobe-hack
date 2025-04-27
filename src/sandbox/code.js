@@ -262,8 +262,12 @@ function start() {
           // Add to artboard
           artboard.children.append(questionText)
           artboard.children.append(answerText)
-
+          
+          // Set the answer text opacity to 0 to hide it initially
+          answerText.opacity = 0
+          
           console.log("Added question and answer texts to artboard with text wrapping enabled")
+          console.log("Answer text opacity set to 0")
 
           return { questionText, answerText }
 
@@ -423,6 +427,43 @@ function start() {
       } catch (error) {
         console.error("Error in generateStudyGuide:", error)
         return { success: false, error: error.message }
+      }
+    },
+    
+    // Show answer for flashcards by setting opacity to 1
+    showAnswer: async () => {
+      try {
+        console.log("Show answer function called");
+
+        // Get the current page
+        const page = editor.context.currentPage;
+        let foundAnswerNode = false;
+
+        // Iterate every artboard on the page…
+        for (const artboard of page.artboards) {
+          // …and every node on that artboard
+          for (const node of artboard.allChildren) {
+            // Look for text nodes…
+            if (node.type === constants.SceneNodeType.text) {
+              const text = node.fullContent?.text;
+              // …whose text includes "Answer:"
+              if (text && text.includes("Answer:")) {
+                node.opacity = 1;
+                console.log("Revealed:", node);
+                foundAnswerNode = true;
+              }
+            }
+          }
+        }
+
+        if (!foundAnswerNode) {
+          console.log("No answer nodes found on current page");
+        }
+
+        return { success: true, message: "Answer revealed" };
+      } catch (error) {
+        console.error("Error in showAnswer:", error);
+        return { success: false, error: error.message };
       }
     },
   }

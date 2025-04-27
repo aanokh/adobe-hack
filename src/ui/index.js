@@ -96,10 +96,16 @@ addOnUISdk.ready.then(async () => {
       })
     }
     
-    // Function to show answer (empty for now)
-    function showAnswer() {
+    // Function to show answer by setting opacity to 1
+    async function showAnswer() {
       console.log("Show answer button clicked")
-      // Add functionality here later
+      try {
+        // Call the sandbox function to show the answer
+        const result = await sandboxProxy.showAnswer()
+        console.log("Show answer result:", result)
+      } catch (error) {
+        console.error("Error showing answer:", error)
+      }
     }
 
     // Handle file selection via button
