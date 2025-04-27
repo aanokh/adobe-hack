@@ -19,6 +19,9 @@ function start() {
         y: 100,
       }
 
+      const bgColor = isError 
+        ? { red: 0.9, green: 0.3, blue: 0.3, alpha: 1 } 
+        : { red: 0.49, green: 0.36, blue: 0.96, alpha: 1 }
       container.fill = editor.makeColorFill(bgColor)
 
       // Add text
@@ -35,12 +38,18 @@ function start() {
         { start: 0, length: message.length },
       )
 
+      // Set text to auto-height layout for wrapping
+      textNode.layout = {
+        type: constants.TextType.autoHeight,
+        width: 550 // Slightly less than container width to provide margin
+      }
+      
       textNode.textAlignment = constants.TextAlignment.center
 
       // Position text in center of container
       textNode.translation = {
-        x: container.width / 2 - message.length * 5,
-        y: container.height / 2 - 10,
+        x: 25, // Left margin
+        y: 20, // Top margin
       }
 
       // Add to document
@@ -84,6 +93,12 @@ function start() {
         // Apply a 24-point font size to the entire string
         textNode.fullContent.applyCharacterStyles({ fontSize: 24 }, { start: 0, length: safeMessage.length })
 
+        // Set the text to auto-wrap with a specified width
+        textNode.layout = {
+          type: constants.TextType.autoHeight,
+          width: 600 // Set a fixed width for text wrapping
+        }
+
         // Set the textAlignment property for left alignment
         textNode.textAlignment = constants.TextAlignment.left
 
@@ -94,7 +109,7 @@ function start() {
         // Add to document
         insertionParent.children.append(textNode)
 
-        console.log("Text added with fullContent API and font size 24")
+        console.log("Text added with fullContent API and auto-wrap enabled")
         return textNode
       } catch (error) {
         console.error("Error displaying message:", error)
@@ -188,7 +203,8 @@ function start() {
           )
 
           // Position header text
-          headerText.translation = { x: 30, y: 50 }
+          headerText.translation = { x: 30, y: headerRect.height/4 }
+          headerText.textAlignment = constants.TextAlignment.center;
 
           // Add header text to artboard
           artboard.children.append(headerText)
@@ -207,6 +223,12 @@ function start() {
             { fontSize: 28, color: { red: 0.2, green: 0.2, blue: 0.2, alpha: 1 } },
             { start: `Question ${index + 1}:`.length, length: flashcard.question.length + 1 },
           )
+
+          // Set text wrapping for question with auto-height layout
+          questionText.layout = {
+            type: constants.TextType.autoHeight,
+            width: artboard.width - 100 // Width with margins
+          }
 
           // Set alignment
           questionText.textAlignment = constants.TextAlignment.left
@@ -229,17 +251,23 @@ function start() {
             { start: `Answer:`.length, length: flashcard.answer.length + 1 },
           )
 
+          // Set text wrapping for answer with auto-height layout
+          answerText.layout = {
+            type: constants.TextType.autoHeight,
+            width: artboard.width - 100 // Width with margins
+          }
+
           // Set alignment
           answerText.textAlignment = constants.TextAlignment.left
 
-          // Position answer below question
+          // Position answer below question - create space between them
           answerText.translation = { x: 50, y: 300 }
 
           // Add to artboard
           artboard.children.append(questionText)
           artboard.children.append(answerText)
 
-          console.log("Added question and answer texts to artboard")
+          console.log("Added question and answer texts to artboard with text wrapping enabled")
 
           return { questionText, answerText }
 
