@@ -469,30 +469,34 @@ function start() {
           // Add header text to artboard
           artboard.children.append(headerText);
 
-          // Define text and image positioning based on whether an image exists
-          let contentTextWidth, contentTextX;
-
+          // Define text and image positioning with fixed areas so they don't overlap
+          // Left side for text, right side for image (if any)
+          
+          // Calculate dimensions - we'll use 60% width for text (left) and 40% for image (right) when image exists
+          let contentTextWidth;
+          
           if (slide.image) {
             console.log("Slide has image URL:", slide.image);
-            // If image exists, position text in bottom left (using half the width)
-            contentTextWidth = Math.floor(artboard.width / 2) - 70; // Half width minus margin
-            contentTextX = 50; // Left margin
-
-            // The image will be added by the UI side using renderLatexImage in the top right
-            // We don't need to change vertical position as the UI handles image placement
+            // If image exists, position text on left side with fixed width
+            contentTextWidth = Math.floor(artboard.width * 0.55); // 55% of slide width for text
           } else {
             // If no image, text gets full width
             contentTextWidth = artboard.width - 100; // Full width minus margins
-            contentTextX = 50; // Left margin
           }
-
+          
+          // Fixed position for text - always on left side, just below header
+          const contentTextX = 50; // Left margin
+          const contentTextY = headerRect.height + 40; // Just below header
+          
           // Prepare and wrap the content text
           const rawContent = slide.content || "";
-          const wrappedContent = wrapText(rawContent, 70); // Use the same wrapText function, maybe 70 chars for slides
-
+          // Adjust wrap length based on available width
+          const wrapChars = slide.image ? 55 : 70; // Fewer chars per line when image present
+          const wrappedContent = wrapText(rawContent, wrapChars);
+          
           const contentText = editor.createText();
           contentText.fullContent.text = wrappedContent;
-
+          
           // Apply styling to content
           contentText.fullContent.applyCharacterStyles(
             {
@@ -501,19 +505,24 @@ function start() {
             },
             { start: 0, length: wrappedContent.length }
           );
-
-          // ❌ REMOVE THIS:
-          // contentText.layout = { type: ..., width: ... };
-
-          // ✅ Set textAlignment and translation only
+          
+          // Set alignment and position - text always on left side below header
           contentText.textAlignment = constants.TextAlignment.left;
-
-          // Position text - if image exists, position it in bottom left
-          const contentYPosition = slide.image ?
-            Math.floor(artboard.height / 2) + 20 :
-            headerRect.height;
-
-          contentText.translation = { x: contentTextX, y: contentYPosition };
+          contentText.translation = { x: contentTextX, y: contentTextY };
+          
+          // Add comment to tell UI where to place the image if it exists
+          if (slide.image) {
+            // Note for UI component: The image should be placed at the following coordinates
+            // We're defining a dedicated area on the right side for the image
+            // These values are not used in this code but are meant as guidance for the UI
+            const imageArea = {
+              x: Math.floor(artboard.width * 0.6), // Start at 60% of slide width
+              y: headerRect.height + 40,           // Same vertical position as text
+              width: Math.floor(artboard.width * 0.35), // 35% of slide width
+              height: artboard.height - headerRect.height - 100 // Full height minus header and footer
+            };
+            console.log("Image area for UI:", imageArea);
+          }
 
           // Add to artboard
           artboard.children.append(contentText);
