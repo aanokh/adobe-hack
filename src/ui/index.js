@@ -82,10 +82,25 @@ addOnUISdk.ready.then(async () => {
     const fileInput = document.getElementById("file-input")
     const fileSelectButton = document.getElementById("file-select-button")
     const uploadButton = document.getElementById("upload-button")
+    const showAnswerButton = document.getElementById("show-answer-button")
     const fileName = document.getElementById("file-name")
     const uploadContainer = document.getElementById("upload-container")
 
     let selectedFile = null
+    
+    // Set up show answer button
+    if (showAnswerButton) {
+      showAnswerButton.addEventListener("click", () => {
+        animateButtonClick(showAnswerButton)
+        showAnswer()
+      })
+    }
+    
+    // Function to show answer (empty for now)
+    function showAnswer() {
+      console.log("Show answer button clicked")
+      // Add functionality here later
+    }
 
     // Handle file selection via button
     if (fileSelectButton && fileInput) {
