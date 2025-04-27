@@ -511,7 +511,7 @@ function start() {
           // Position text - if image exists, position it in bottom left
           const contentYPosition = slide.image ?
             Math.floor(artboard.height / 2) + 20 :
-            headerRect.height + 40;
+            headerRect.height;
 
           contentText.translation = { x: contentTextX, y: contentYPosition };
 
@@ -910,7 +910,7 @@ function start() {
         headerText.textAlignment = constants.TextAlignment.center;
 
         // Position header text
-        headerText.translation = { x: 500, y: headerRect.height / 1.5 };
+        headerText.translation = { x: 600, y: headerRect.height / 1.5 };
 
         // Add header text to artboard
         artboard.children.append(headerText);
@@ -986,8 +986,8 @@ function start() {
         // Set text alignment and position normally
         contentText.textAlignment = constants.TextAlignment.left;
         contentText.translation = {
-          x: 40,
-          y: headerRect.height + 20
+          x: 20,
+          y: headerRect.height + 40
         };
 
         // ✅ Add to artboard
@@ -1446,7 +1446,7 @@ function start() {
 
         // ✅ Keep
         footerText.textAlignment = constants.TextAlignment.center;
-        footerText.translation = { x: 100, y: artboard.height - 50 };
+        footerText.translation = { x: 500, y: artboard.height - 50 };
 
 
         // Add footer to artboard
