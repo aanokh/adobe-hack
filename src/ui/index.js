@@ -1126,8 +1126,51 @@ addOnUISdk.ready.then(async () => {
                 console.log("Slides data received:", responseData);
                 
                 if (fileName) {
-                  fileName.textContent = "Slides data received successfully!";
+                  fileName.textContent = "Generating slides in document...";
                   fileName.style.color = "green";
+                }
+                
+                // Rather than create all slides at once and then add images,
+                // we'll create each slide and add its image immediately if it has one
+                const allSlides = responseData.slides || [];
+                let totalCreatedSlides = 0;
+                
+                // Process slides one by one
+                for (let i = 0; i < allSlides.length; i++) {
+                  const slide = allSlides[i];
+                  
+                  // Create a single slide
+                  const singleSlideResult = await sandboxProxy.generateSingleSlide(slide, i, allSlides.length);
+                  console.log(`Created slide ${i+1}:`, singleSlideResult);
+                  
+                  if (singleSlideResult.success) {
+                    totalCreatedSlides++;
+                    
+                    // If the slide has an image, render it right now while we're still on this page
+                    if (slide.image) {
+                      console.log(`Rendering image for slide ${i+1}:`, slide.image);
+                      try {
+                        await renderLatexImage(slide.image);
+                      } catch (imgError) {
+                        console.error("Error rendering slide image:", imgError);
+                      }
+                    }
+                  }
+                }
+                
+                const slidesResult = {
+                  success: totalCreatedSlides > 0,
+                  pageCount: totalCreatedSlides,
+                  message: `Created ${totalCreatedSlides} slides`
+                };
+                console.log("Slides creation result:", slidesResult);
+                
+                if (slidesResult.success) {
+                  if (fileName) {
+                    fileName.textContent = `Created ${slidesResult.pageCount} slides successfully!`;
+                  }
+                } else {
+                  throw new Error(slidesResult.error || "Failed to create slides");
                 }
               } else {
                 throw new Error(`Server responded with status ${response.status}`);

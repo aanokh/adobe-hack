@@ -381,15 +381,193 @@ function start() {
       }
     },
 
-    // Generate slides (placeholder for future implementation)
-    generateSlides: async (prompt, style) => {
+    // Generate a single slide from slide data
+    generateSingleSlide: async (slide, index, totalCount) => {
       try {
-        console.log("Generate slides request received:", prompt, style)
-        createDocumentNotification("Slide generation coming soon!", false)
-        return { success: true, message: "Slide generation coming soon!" }
+        console.log(`Generating slide ${index + 1} of ${totalCount}:`, slide.title);
+        
+        // Define page size
+        const pageSize = { width: 1200, height: 800 };
+        
+        // Get document root
+        const docRoot = editor.documentRoot;
+        
+        // Create page for the slide
+        try {
+          console.log(`Creating slide page ${index + 1} of ${totalCount}`);
+          
+          // Create page with specific size
+          const newPage = docRoot.pages.addPage(pageSize);
+          console.log("New slide page created:", newPage);
+          
+          if (!newPage) {
+            throw new Error("Failed to create slide page");
+          }
+          
+          // Get the first artboard from the page
+          const artboard = newPage.artboards.first;
+          console.log("Using artboard:", artboard);
+          
+          // Create background rectangle
+          const bgRect = editor.createRectangle();
+          bgRect.width = artboard.width;
+          bgRect.height = artboard.height;
+          bgRect.translation = { x: 0, y: 0 };
+          
+          // Use a light purple color for the background
+          const bgColor = { red: 0.97, green: 0.95, blue: 1.0, alpha: 1 };
+          bgRect.fill = editor.makeColorFill(bgColor);
+          
+          // Add to artboard first (so it's in the background)
+          artboard.children.append(bgRect);
+          
+          // Create a header rectangle
+          const headerRect = editor.createRectangle();
+          headerRect.width = artboard.width;
+          headerRect.height = 80;
+          headerRect.translation = { x: 0, y: 0 };
+          
+          // Use a purple color for the header
+          const headerColor = { red: 0.49, green: 0.36, blue: 0.96, alpha: 1 };
+          headerRect.fill = editor.makeColorFill(headerColor);
+          
+          // Add header to artboard
+          artboard.children.append(headerRect);
+          
+          // Create header text with slide title
+          const headerText = editor.createText();
+          headerText.fullContent.text = slide.title || `Slide ${index + 1}`;
+          
+          // Style header text
+          headerText.fullContent.applyCharacterStyles(
+            {
+              fontSize: 32,
+              fontWeight: "bold",
+              color: { red: 1, green: 1, blue: 1, alpha: 1 },
+            },
+            { start: 0, length: headerText.fullContent.text.length },
+          );
+          
+          // Position header text
+          headerText.translation = { x: 500, y: headerRect.height / 1.5 };
+          headerText.textAlignment = constants.TextAlignment.center;
+          
+          // Add header text to artboard
+          artboard.children.append(headerText);
+          
+          // Space for slide image if available
+          let contentYPosition = headerRect.height + 40;
+          
+          if (slide.image) {
+            console.log("Slide has image URL:", slide.image);
+            // The image will be added by the UI side using renderLatexImage
+            // Just leave space for it
+            contentYPosition += 320;
+          }
+          
+          // Create the content text
+          const contentText = editor.createText();
+          contentText.fullContent.text = slide.content || "";
+          
+          // Apply styling to content
+          contentText.fullContent.applyCharacterStyles(
+            {
+              fontSize: 20,
+              color: { red: 0.2, green: 0.2, blue: 0.2, alpha: 1 },
+            },
+            { start: 0, length: contentText.fullContent.text.length }
+          );
+          
+          // Set text wrapping with auto-height layout
+          contentText.layout = {
+            type: constants.TextType.autoHeight,
+            width: artboard.width - 100 // Width with margins
+          };
+          
+          // Set alignment
+          contentText.textAlignment = constants.TextAlignment.left;
+          
+          // Position below header or image with some margin
+          contentText.translation = { x: 50, y: contentYPosition };
+          
+          // Add to artboard
+          artboard.children.append(contentText);
+          
+          // Create navigation footer
+          const navRect = editor.createRectangle();
+          navRect.width = artboard.width;
+          navRect.height = 60;
+          navRect.translation = { x: 0, y: artboard.height - 60 };
+          
+          // Use a light purple color for the footer
+          const navColor = { red: 0.49, green: 0.36, blue: 0.96, alpha: 0.2 };
+          navRect.fill = editor.makeColorFill(navColor);
+          
+          // Add counter text
+          const navText = editor.createText();
+          navText.fullContent.text = `Slide ${index + 1} of ${totalCount}`;
+          
+          // Style navigation text
+          navText.fullContent.applyCharacterStyles(
+            {
+              fontSize: 24,
+              fontWeight: "bold",
+              color: { red: 0.49, green: 0.36, blue: 0.96, alpha: 1 },
+            },
+            { start: 0, length: navText.fullContent.text.length },
+          );
+          
+          navText.textAlignment = constants.TextAlignment.center;
+          
+          // Position navigation text
+          navText.translation = { x: artboard.width / 2, y: artboard.height - 35 };
+          
+          // Add to artboard
+          artboard.children.append(navRect);
+          artboard.children.append(navText);
+          
+          console.log(`Completed slide ${index + 1}`);
+          
+          return {
+            success: true,
+            pageId: newPage.id
+          };
+        } catch (error) {
+          console.error("Error creating slide page:", error);
+          return { 
+            success: false, 
+            error: error.message 
+          };
+        }
       } catch (error) {
-        console.error("Error in generateSlides:", error)
-        return { success: false, error: error.message }
+        console.error(`Error generating slide ${index + 1}:`, error);
+        return { 
+          success: false, 
+          error: error.message 
+        };
+      }
+    },
+    
+    // Maintain backward compatibility by implementing the full slides generation function
+    generateSlides: async (slidesData) => {
+      try {
+        console.log("Generate slides request received, but we'll use the single slide approach instead");
+        
+        if (!slidesData || !Array.isArray(slidesData.slides) || slidesData.slides.length === 0) {
+          console.error("Invalid slides data format:", slidesData);
+          return { success: false, error: "Slides data is not in the expected format" };
+        }
+        
+        // This just returns success since the actual work will be done in the UI
+        // by calling generateSingleSlide for each slide
+        return {
+          success: true,
+          pageCount: slidesData.slides.length,
+          message: `Ready to create ${slidesData.slides.length} slides`,
+        };
+      } catch (error) {
+        console.error("Error in generateSlides:", error);
+        return { success: false, error: error.message };
       }
     },
 
