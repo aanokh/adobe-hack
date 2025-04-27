@@ -73,7 +73,7 @@ function start() {
 
       // Append directly to the current artboard
       const docRoot = editor.documentRoot;
-      const currentPage = docRoot.pages.item(docRoot.pages.length - 1); // Last page created
+      const currentPage = editor.context.currentPage; // Last page created
       const artboard = currentPage.artboards.first;
 
       artboard.children.append(container);
@@ -126,7 +126,7 @@ function start() {
 
         // Position text in the document
         const docRoot = editor.documentRoot;
-        const currentPage = docRoot.pages.item(docRoot.pages.length - 1);
+        const currentPage = editor.context.currentPage;
         const artboard = currentPage.artboards.first;
 
         artboard.children.append(textNode);
@@ -1026,7 +1026,7 @@ function start() {
 
         // Get the current page
         const docRoot = editor.documentRoot;
-        const currentPage = docRoot.pages.item(docRoot.pages.length - 1); // Latest page
+        const currentPage = editor.context.currentPage; // Latest page
         if (!currentPage) {
           console.log("No current page found");
           return { success: false, error: "No current page available" };
@@ -1202,8 +1202,7 @@ function start() {
         console.log("Show answer function called");
 
         // Get the current page
-        const docRoot = editor.documentRoot;
-        const page = docRoot.pages.item(docRoot.pages.length - 1); // Latest page
+        const page = editor.context.currentPage;
         let foundAnswerNode = false;
 
         // Iterate every artboard on the page…
@@ -1240,7 +1239,7 @@ function start() {
     try {
       // Get the current page
       const docRoot = editor.documentRoot;
-      const currentPage = docRoot.pages.item(docRoot.pages.length - 1); // Latest page
+      const currentPage = editor.context.currentPage; // Latest page
       if (!currentPage) {
         console.log("No current page found");
         return null;
