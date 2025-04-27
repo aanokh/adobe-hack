@@ -248,6 +248,42 @@
           </div>
           <p id="file-name" class="file-name"></p>
           <div id="flashcards-files-list" class="files-list"></div>
+          <!-- Flashcard Display (initially hidden) -->
+          <div id="flashcard-display-container" class="flashcard-display-container hidden">
+            <div class="flashcard-display">
+              <span class="flashcard-counter" id="flashcard-counter">Card 1 of 5</span>
+              <div class="flashcard-question">
+                <h3 id="flashcard-question-text">Question will appear here</h3>
+              </div>
+              <button id="reveal-answer-button" class="secondary-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                Reveal Answer
+              </button>
+              <div class="flashcard-answer hidden" id="flashcard-answer-container">
+                <p id="flashcard-answer-text">Answer will appear here</p>
+              </div>
+              <div class="flashcard-navigation">
+                <button id="prev-flashcard-button" class="nav-button" disabled>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                  Previous
+                </button>
+                <button id="next-flashcard-button" class="nav-button primary">
+                  Next
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Generate Button -->

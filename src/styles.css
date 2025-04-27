@@ -579,6 +579,10 @@ body {
 }
 
 /* Flashcard Display */
+.flashcard-display-container {
+  margin-top: 1.5rem;
+}
+
 .flashcard-display {
   position: relative;
   background-color: var(--white);
@@ -633,6 +637,9 @@ body {
   font-size: 0.875rem;
   padding: 0.5rem;
   border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 
 .nav-button:hover {
@@ -643,8 +650,6 @@ body {
 .nav-button.primary {
   color: var(--purple-600);
   font-weight: 500;
-  display: flex;
-  align-items: center;
 }
 
 .nav-button.primary:hover {
