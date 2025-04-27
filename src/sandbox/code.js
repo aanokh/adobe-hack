@@ -1049,6 +1049,76 @@ function start() {
       return null;
     }
   };
+  
+  // Add function to get text content from a node by ID
+  sandboxApi.getOutlineText = async (nodeId, pageId) => {
+    try {
+      console.log("Getting outline text content for node:", nodeId, "on page:", pageId);
+      
+      // First try to find the page
+      const docRoot = editor.documentRoot;
+      if (!docRoot || !docRoot.pages) {
+        console.error("Cannot access document pages");
+        return { success: false, error: "Cannot access document pages" };
+      }
+      
+      // Find the page by ID
+      let targetPage = null;
+      for (let i = 0; i < docRoot.pages.length; i++) {
+        const page = docRoot.pages.item(i);
+        if (page.id === pageId) {
+          targetPage = page;
+          break;
+        }
+      }
+      
+      if (!targetPage) {
+        console.error("Could not find page with ID:", pageId);
+        return { success: false, error: "Page not found" };
+      }
+      
+      console.log("Found page:", targetPage);
+      
+      // Search for the node on the artboard
+      let textNode = null;
+      const artboard = targetPage.artboards.first;
+      
+      if (!artboard) {
+        console.error("Could not find artboard on page");
+        return { success: false, error: "Artboard not found" };
+      }
+      
+      // Search through all children
+      for (const node of artboard.allChildren) {
+        if (node.id === nodeId) {
+          textNode = node;
+          break;
+        }
+      }
+      
+      if (!textNode) {
+        console.error("Could not find text node with ID:", nodeId);
+        return { success: false, error: "Text node not found" };
+      }
+      
+      if (textNode.type !== constants.SceneNodeType.text) {
+        console.error("Node is not a text node:", textNode);
+        return { success: false, error: "Node is not a text node" };
+      }
+      
+      // Get the raw text content without any parsing
+      const textContent = textNode.fullContent.text;
+      console.log("Found outline text content:", textContent);
+      
+      return {
+        success: true,
+        textContent: textContent
+      };
+    } catch (error) {
+      console.error("Error getting outline text:", error);
+      return { success: false, error: error.message };
+    }
+  };
 
   // Add function to generate outline and render it to a text node on a new page
   sandboxApi.generateOutline = async (outlineData) => {

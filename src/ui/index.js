@@ -1086,12 +1086,60 @@ addOnUISdk.ready.then(async () => {
               throw new Error(`Server responded with status ${response.status}`);
             }
           } else {
-            // TODO: This part will be implemented in the future to handle actual slide generation
-            console.log("Full slides generation will be implemented in the future. Using text node ID:", textNodeId, "and page ID:", outlinePageId);
+            // Now we're generating slides using the outline
+            console.log("Generating slides from outline. Using text node ID:", textNodeId, "and page ID:", outlinePageId);
             
-            if (fileName) {
-              fileName.textContent = "Slides feature coming soon!";
-              fileName.style.color = "green";
+            try {
+              // First, get the outline text content from the text node
+              const outlineResult = await sandboxProxy.getOutlineText(textNodeId, outlinePageId);
+              
+              if (!outlineResult.success) {
+                throw new Error(outlineResult.error || "Failed to get outline text");
+              }
+              
+              console.log("Retrieved outline text:", outlineResult.textContent);
+              
+              // Now call the backend to generate slides with the outline
+              const formData = new FormData();
+              formData.append("file", selectedFile);
+              
+              const promptInput = document.getElementById("slides-prompt");
+              const promptText = promptInput ? promptInput.value : "";
+              
+              // Add the outline text to the description JSON
+              formData.append("description", JSON.stringify({
+                prompt: promptText || "Generate slides from this outline",
+                outline: outlineResult.textContent  // Add the outline text here
+              }));
+              
+              // Update UI
+              generateSlidesButton.textContent = "Generating...";
+              
+              // Call the generate-slidedeck backend endpoint
+              const response = await fetch("https://wufhalwuhlwauhflu.online/generate-slidedeck", {
+                method: "POST",
+                body: formData,
+              });
+              
+              if (response.ok) {
+                const responseData = await response.json();
+                console.log("Slides data received:", responseData);
+                
+                if (fileName) {
+                  fileName.textContent = "Slides data received successfully!";
+                  fileName.style.color = "green";
+                }
+              } else {
+                throw new Error(`Server responded with status ${response.status}`);
+              }
+            } catch (error) {
+              console.error("Error generating slides:", error);
+              if (fileName) {
+                fileName.textContent = "Slide generation error: " + error.message;
+                fileName.style.color = "red";
+              }
+            } finally {
+              generateSlidesButton.textContent = "Generate Slides";
             }
           }
         } catch (error) {
