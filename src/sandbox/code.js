@@ -484,7 +484,7 @@ function start() {
           );
           
           // Position header text
-          headerText.translation = { x: 300, y: headerRect.height / 1.5 };
+          headerText.translation = { x: 500, y: headerRect.height / 1.5 };
           
           // Add header text to artboard
           artboard.children.append(headerText);
@@ -515,7 +515,7 @@ function start() {
           questionText.textAlignment = constants.TextAlignment.left;
           
           // Position question below header
-          questionText.translation = { x: 50, y: 120 };
+          questionText.translation = { x: 50, y: 100 };
           
           // Add to artboard
           artboard.children.append(questionText);
