@@ -393,6 +393,35 @@ addOnUISdk.ready.then(async () => {
   }
 
   function setupQuizzes() {
+    // Setup quiz answer button event listeners
+    const setupQuizAnswerButtons = () => {
+      const answerButtons = [
+        document.getElementById('quiz-answer-a'),
+        document.getElementById('quiz-answer-b'),
+        document.getElementById('quiz-answer-c'),
+        document.getElementById('quiz-answer-d')
+      ];
+      
+      // Add click event to each button
+      answerButtons.forEach(button => {
+        if (button) {
+          button.addEventListener('click', () => {
+            // Remove selection from all buttons
+            answerButtons.forEach(btn => {
+              if (btn) btn.classList.remove('selected');
+            });
+            
+            // Add selection to clicked button
+            button.classList.add('selected');
+            
+            // For future implementation: Check if answer is correct
+            // This will be connected to the quiz data stored in the sandbox
+          });
+        }
+      });
+    };
+    
+    setupQuizAnswerButtons();
     const fileInput = document.getElementById("quizzes-file-input");
     const fileName = document.getElementById("quizzes-file-name");
     const generateQuizButton = document.getElementById("generate-quiz-button");
@@ -466,11 +495,16 @@ addOnUISdk.ready.then(async () => {
         try {
           generateQuizButton.disabled = true;
           generateQuizButton.textContent = "Uploading...";
+          
+          // Hide answer buttons when starting a new quiz
+          document.getElementById('quiz-answers-container').classList.add('hidden');
 
           const formData = new FormData();
           formData.append("file", selectedFile);
 
           const promptInput = document.getElementById("quizzes-prompt");
+          console.log("PROMPT INPUT! PROMPT INPUT! ");
+          console.log(promptInput)
           const promptText = promptInput ? promptInput.value : "";
 
           formData.append("description", JSON.stringify({
@@ -487,8 +521,33 @@ addOnUISdk.ready.then(async () => {
             console.log("Quiz data received:", responseData);
 
             if (fileName) {
-              fileName.textContent = "Quiz generated successfully!";
+              fileName.textContent = "Quiz data received. Creating quiz pages...";
               fileName.style.color = "green";
+            }
+            
+            if (responseData && responseData.problems && responseData.problems.length > 0) {
+              console.log("Received quiz problems:", JSON.stringify(responseData.problems));
+              
+              // Call the sandbox function to create quiz pages
+              const result = await sandboxProxy.generateQuiz(responseData);
+              console.log("Quiz creation result:", result);
+              
+              if (result.success && fileName) {
+                fileName.textContent = `Created ${result.pageCount} quiz questions successfully!`;
+                
+                // Show the answer buttons and update their text
+                document.getElementById('quiz-answers-container').classList.remove('hidden');
+                document.getElementById('quiz-answer-a').textContent = 'Option A';
+                document.getElementById('quiz-answer-b').textContent = 'Option B';
+                document.getElementById('quiz-answer-c').textContent = 'Option C';
+                document.getElementById('quiz-answer-d').textContent = 'Option D';
+              }
+            } else {
+              console.log("No quiz problems received");
+              if (fileName) {
+                fileName.textContent = "No quiz questions could be generated from this document.";
+                fileName.style.color = "red";
+              }
             }
           } else {
             throw new Error(`Server responded with status ${response.status}`);
@@ -738,6 +797,8 @@ addOnUISdk.ready.then(async () => {
     }
   }
 
+  // Buttons are now permanently visible, so no need for a toggle function
+  
   // Initialize all functionality
   function init() {
     setupNavigation()

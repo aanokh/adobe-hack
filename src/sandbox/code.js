@@ -4,6 +4,10 @@ import { editor, constants } from "express-document-sdk"
 // Get the document sandbox runtime.
 const { runtime } = addOnSandboxSdk.instance
 
+// Store quiz data for later access
+let storedQuizData = null;
+let pageToQuestionMap = [];
+
 function start() {
   // Helper function to create an in-document notification
   const createDocumentNotification = (message, isError = false) => {
@@ -19,6 +23,8 @@ function start() {
         y: 100,
       }
 
+      // Define the background color here to fix the reference error
+      const bgColor = { red: 0.49, green: 0.36, blue: 0.96, alpha: 0.2 };
       container.fill = editor.makeColorFill(bgColor)
 
       // Add text
@@ -387,33 +393,243 @@ function start() {
       }
     },
 
-    // Generate quiz (placeholder for future implementation)
-    generateQuiz: async (prompt) => {
+    // Generate quiz with questions and answers
+    generateQuiz: async (quizData) => {
       try {
-        console.log("Generate quiz request received:", prompt);
-
-        // Create a rectangle
-        const rect = editor.createRectangle();
-
-        // Set its size
-        rect.width = 600;
-        rect.height = 400;
-        rect.translation = { x: 100, y: 100 };
-
-        // Create an image fill
-        const imageFill = editor.makeImageFill("https://wufhalwuhlwauhflu.online/static/latex_1745714077041.png");
-
-        // Set the rectangle's fill to be the image
-        rect.fill = imageFill;
-
-        // Insert into the document
-        const insertionParent = editor.context.insertionParent;
-        insertionParent.children.append(rect);
-
-        console.log("Image rectangle inserted successfully");
-        return { success: true, message: "Image inserted successfully!" };
+        console.log("Generate quiz request received:", JSON.stringify(quizData));
+        
+        if (!Array.isArray(quizData.problems)) {
+          console.error("Invalid quiz data format:", quizData);
+          // Removed notification call to fix error
+          return { success: false, error: "Quiz data is not in the expected format" };
+        }
+        
+        // Store the quiz data for later access
+        storedQuizData = quizData;
+        // Reset the page to question mapping
+        pageToQuestionMap = [];
+        
+        // Log start of quiz generation instead of showing notification
+        console.log("Generating quiz questions...");
+        
+        // Define page size (same as flashcards)
+        const pageSize = { width: 1200, height: 800 };
+        
+        // Get document root
+        const docRoot = editor.documentRoot;
+        console.log("Document root:", docRoot);
+        
+        // Create a page for each quiz question
+        const createPageForQuestion = (index, totalCount) => {
+          try {
+            console.log(`Creating page ${index + 1} of ${totalCount}`);
+            
+            // Create page with specific size
+            const newPage = docRoot.pages.addPage(pageSize);
+            console.log("New page created:", newPage);
+            
+            return newPage;
+          } catch (error) {
+            console.error("Error creating page:", error);
+            return null;
+          }
+        };
+        
+        // Create quiz question content (similar to flashcard content but adapted for quiz)
+        const createQuizContent = (page, questionData, index) => {
+          console.log(`Creating content for quiz question ${index + 1}:`, questionData);
+          
+          // Get the first artboard from the page
+          const artboard = page.artboards.first;
+          console.log("Using artboard:", artboard);
+          
+          // Create background rectangle
+          const bgRect = editor.createRectangle();
+          bgRect.width = artboard.width;
+          bgRect.height = artboard.height;
+          bgRect.translation = { x: 0, y: 0 };
+          
+          // Use a light purple color for the background (matching our UI)
+          const bgColor = { red: 0.97, green: 0.95, blue: 1.0, alpha: 1 };
+          bgRect.fill = editor.makeColorFill(bgColor);
+          
+          // Add to artboard first (so it's in the background)
+          artboard.children.append(bgRect);
+          
+          // Create a header rectangle
+          const headerRect = editor.createRectangle();
+          headerRect.width = artboard.width;
+          headerRect.height = 80;
+          headerRect.translation = { x: 0, y: 0 };
+          
+          // Use a purple color for the header (matching our UI)
+          const headerColor = { red: 0.49, green: 0.36, blue: 0.96, alpha: 1 };
+          headerRect.fill = editor.makeColorFill(headerColor);
+          
+          // Add header to artboard
+          artboard.children.append(headerRect);
+          
+          // Create header text
+          const headerText = editor.createText();
+          headerText.fullContent.text = quizData.title || "StudyGenius Quiz";
+          
+          // Style header text
+          headerText.fullContent.applyCharacterStyles(
+            {
+              fontSize: 32,
+              fontWeight: "bold",
+              color: { red: 1, green: 1, blue: 1, alpha: 1 },
+            },
+            { start: 0, length: headerText.fullContent.text.length },
+          );
+          
+          // Position header text
+          headerText.translation = { x: 300, y: headerRect.height / 1.5 };
+          
+          // Add header text to artboard
+          artboard.children.append(headerText);
+          
+          // Create the question text
+          const questionText = editor.createText();
+          questionText.fullContent.text = `Question ${index + 1}: ${questionData.title}`;
+          
+          // Apply styling to question title
+          questionText.fullContent.applyCharacterStyles(
+            { fontSize: 32, fontWeight: "bold", color: { red: 0.49, green: 0.36, blue: 0.96, alpha: 1 } },
+            { start: 0, length: `Question ${index + 1}:`.length },
+          );
+          
+          // Apply different style to the question title text
+          questionText.fullContent.applyCharacterStyles(
+            { fontSize: 28, color: { red: 0.2, green: 0.2, blue: 0.2, alpha: 1 } },
+            { start: `Question ${index + 1}:`.length, length: questionData.title.length + 1 },
+          );
+          
+          // Set text wrapping for question with auto-height layout
+          questionText.layout = {
+            type: constants.TextType.autoHeight,
+            width: artboard.width - 100 // Width with margins
+          };
+          
+          // Set alignment
+          questionText.textAlignment = constants.TextAlignment.left;
+          
+          // Position question below header
+          questionText.translation = { x: 50, y: 120 };
+          
+          // Add to artboard
+          artboard.children.append(questionText);
+          
+          return { questionText };
+        };
+        
+        // Create navigation elements on the page
+        const createNavigation = (page, index, totalCount) => {
+          try {
+            console.log(`Creating navigation for quiz question ${index + 1} of ${totalCount}`);
+            
+            // Get the artboard
+            const artboard = page.artboards.first;
+            
+            // Create a colored rectangle at the bottom for navigation controls
+            const navRect = editor.createRectangle();
+            navRect.width = artboard.width;
+            navRect.height = 100;
+            
+            // Position at bottom of artboard
+            navRect.translation = {
+              x: 0,
+              y: artboard.height - navRect.height,
+            };
+            
+            // Give it a purple color (matching our UI)
+            const navColor = { red: 0.49, green: 0.36, blue: 0.96, alpha: 0.2 };
+            navRect.fill = editor.makeColorFill(navColor);
+            
+            // Add counter text
+            const counterText = editor.createText();
+            counterText.fullContent.text = `Quiz Question ${index + 1} of ${totalCount}`;
+            counterText.fullContent.applyCharacterStyles(
+              {
+                fontSize: 24,
+                fontWeight: "bold",
+                color: { red: 0.49, green: 0.36, blue: 0.96, alpha: 1 },
+              },
+              { start: 0, length: counterText.fullContent.text.length },
+            );
+            counterText.textAlignment = constants.TextAlignment.center;
+            
+            // Position counter text
+            counterText.translation = {
+              x: 150,
+              y: artboard.height - 40,
+            };
+            
+            // Add to artboard
+            artboard.children.append(navRect);
+            artboard.children.append(counterText);
+            
+            console.log("Added navigation elements to artboard");
+          } catch (error) {
+            console.error("Error creating navigation:", error);
+          }
+        };
+        
+        // Create pages for each quiz question
+        const createdPages = [];
+        
+        console.log(`Processing ${quizData.problems.length} quiz questions`);
+        for (let i = 0; i < quizData.problems.length; i++) {
+          // Add a maximum limit for safety
+          if (i >= 20) {
+            console.log("Reached maximum quiz question limit (20)");
+            break;
+          }
+          
+          console.log(`Creating quiz question ${i + 1}/${quizData.problems.length}`);
+          const page = createPageForQuestion(i, quizData.problems.length);
+          
+          if (page) {
+            const content = createQuizContent(page, quizData.problems[i], i);
+            createNavigation(page, i, quizData.problems.length);
+            createdPages.push(page);
+            
+            // Store mapping between page ID and question index
+            // This will let us look up which question is on which page later
+            // Also store the actual page number for more robust tracking
+            pageToQuestionMap.push({
+              pageId: page.id,
+              pageNumber: page.pageNumber, // Store actual page number in document
+              questionIndex: i,
+              problem: quizData.problems[i]
+            });
+            
+            console.log(`Completed quiz question ${i + 1}/${quizData.problems.length}`);
+          }
+        }
+        
+        // Display a success message
+        console.log(`Created ${createdPages.length} quiz question pages`);
+        
+        // Jump to the first quiz page
+        if (createdPages.length > 0) {
+          console.log("Created quiz pages successfully");
+          // Removed bringIntoView to fix the error
+          
+          // Return success without notifications
+        } else {
+          console.log("Failed to create any quiz pages");
+          // Skip error notification
+        }
+        
+        return {
+          success: true,
+          pageCount: createdPages.length,
+          message: `Created ${createdPages.length} quiz questions`,
+        };
       } catch (error) {
-        console.error("Error inserting image rectangle:", error);
+        console.error("Error in generateQuiz:", error);
+        // Don't show error notification to avoid errors
         return { success: false, error: error.message };
       }
     },
@@ -427,6 +643,187 @@ function start() {
       } catch (error) {
         console.error("Error in generateStudyGuide:", error)
         return { success: false, error: error.message }
+      }
+    },
+    
+    // Get quiz data for the current page
+    getCurrentQuizQuestion: async () => {
+      try {
+        console.log("Getting quiz question data for current page");
+        
+        if (!storedQuizData) {
+          console.log("No quiz data is stored");
+          return { success: false, error: "No quiz data available" };
+        }
+        
+        // Get the current page
+        const currentPage = editor.context.currentPage;
+        if (!currentPage) {
+          console.log("No current page found");
+          return { success: false, error: "No current page available" };
+        }
+        
+        // Try to find the question data corresponding to the current page ID first
+        let questionData = pageToQuestionMap.find(item => item.pageId === currentPage.id);
+        
+        // If not found by ID, try to find by page number
+        if (!questionData && currentPage.pageNumber) {
+          questionData = pageToQuestionMap.find(item => item.pageNumber === currentPage.pageNumber);
+          console.log("Found question by page number:", currentPage.pageNumber);
+        }
+        
+        if (!questionData) {
+          console.log("No question found for current page (ID:", currentPage.id, ", Number:", currentPage.pageNumber, ")");
+          return { success: false, error: "No question found for this page" };
+        }
+        
+        console.log("Found question data for current page:", questionData);
+        return {
+          success: true,
+          questionData: questionData.problem,
+          pageIndex: questionData.questionIndex
+        };
+      } catch (error) {
+        console.error("Error getting current quiz question data:", error);
+        return { success: false, error: error.message };
+      }
+    },
+    
+    // Update the page mapping to handle cases where page IDs or page numbers have changed
+    updateQuizPageMapping: async () => {
+      try {
+        console.log("Updating quiz page mapping");
+        
+        if (!storedQuizData || !Array.isArray(pageToQuestionMap) || pageToQuestionMap.length === 0) {
+          console.log("No quiz data or mapping to update");
+          return { success: false, error: "No quiz data available" };
+        }
+        
+        // Get all pages in the document
+        const docRoot = editor.documentRoot;
+        if (!docRoot || !docRoot.pages) {
+          console.log("Cannot access document pages");
+          return { success: false, error: "Cannot access document pages" };
+        }
+        
+        const updatedMapping = [];
+        let pagesUpdated = 0;
+        
+        // For each page in the document, check if it contains a quiz question
+        for (let i = 0; i < docRoot.pages.length; i++) {
+          const page = docRoot.pages.item(i);
+          
+          // Look through all children of the first artboard for quiz question text
+          if (page.artboards && page.artboards.first) {
+            const artboard = page.artboards.first;
+            
+            for (const node of artboard.allChildren) {
+              // Look for text nodes containing "Question X:"
+              if (node.type === constants.SceneNodeType.text && 
+                  node.fullContent && 
+                  node.fullContent.text && 
+                  node.fullContent.text.includes("Question")) {
+                  
+                const text = node.fullContent.text;
+                // Try to extract the question number
+                const match = text.match(/Question (\d+):/);
+                
+                if (match && match[1]) {
+                  const questionNum = parseInt(match[1], 10) - 1; // Convert to 0-based index
+                  
+                  if (questionNum >= 0 && questionNum < storedQuizData.problems.length) {
+                    // Found a question, update the mapping
+                    updatedMapping.push({
+                      pageId: page.id,
+                      pageNumber: page.pageNumber,
+                      questionIndex: questionNum,
+                      problem: storedQuizData.problems[questionNum]
+                    });
+                    
+                    pagesUpdated++;
+                    break; // Found the question for this page, move to next page
+                  }
+                }
+              }
+            }
+          }
+        }
+        
+        // Update the mapping if we found any pages
+        if (updatedMapping.length > 0) {
+          pageToQuestionMap = updatedMapping;
+          console.log(`Updated mapping for ${pagesUpdated} quiz question pages`);
+          return { 
+            success: true, 
+            message: `Updated mapping for ${pagesUpdated} quiz question pages`,
+            mappingCount: pagesUpdated
+          };
+        } else {
+          console.log("No quiz questions found in document");
+          return { success: false, error: "No quiz questions found in document" };
+        }
+      } catch (error) {
+        console.error("Error updating quiz page mapping:", error);
+        return { success: false, error: error.message };
+      }
+    },
+    
+    // Get all quiz data
+    getAllQuizData: async () => {
+      try {
+        console.log("Getting all stored quiz data");
+        
+        if (!storedQuizData) {
+          console.log("No quiz data is stored");
+          return { success: false, error: "No quiz data available" };
+        }
+        
+        return {
+          success: true,
+          quizData: storedQuizData,
+          pageMapping: pageToQuestionMap
+        };
+      } catch (error) {
+        console.error("Error getting quiz data:", error);
+        return { success: false, error: error.message };
+      }
+    },
+    
+    getQuizQuestionData: async (pageId) => {
+      try {
+        console.log("Getting quiz question data for page:", pageId);
+        
+        if (!storedQuizData) {
+          console.log("No quiz data is stored");
+          return { success: false, error: "No quiz data available" };
+        }
+        
+        // If pageId is a number, assume it's a page number, otherwise treat as page ID
+        let questionData;
+        
+        if (typeof pageId === 'number') {
+          // Look up by page number
+          questionData = pageToQuestionMap.find(item => item.pageNumber === pageId);
+          console.log("Looking up question by page number:", pageId);
+        } else {
+          // Look up by page ID
+          questionData = pageToQuestionMap.find(item => item.pageId === pageId);
+          console.log("Looking up question by page ID:", pageId);
+        }
+        
+        if (!questionData) {
+          console.log("No question found for given page identifier:", pageId);
+          return { success: false, error: "No question found for this page" };
+        }
+        
+        console.log("Found question data:", questionData);
+        return {
+          success: true,
+          questionData: questionData.problem
+        };
+      } catch (error) {
+        console.error("Error getting quiz question data:", error);
+        return { success: false, error: error.message };
       }
     },
     
